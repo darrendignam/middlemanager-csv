@@ -1,0 +1,27 @@
+{
+  "name": "middlemanager-csv",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www"
+  },
+  "dependencies": {
+    "async-waterfall": "^0.1.5",
+    "bcrypt-nodejs": "0.0.3",
+    "cookie-parser": "~1.4.4",
+    "csurf": "^1.11.0",
+    "debug": "~2.6.9",
+    "dotenv": "^8.2.0",
+    "express": "~4.16.1",
+    "express-session": "^1.17.1",
+    "fast-csv": "^4.3.6",
+    "http-errors": "~1.6.3",
+    "json2csv": "^5.0.6",
+    "mongoose": "^5.12.3",
+    "morgan": "~1.9.1",
+    "multer": "^1.4.2",
+    "needle": "^2.6.0",
+    "pug": "^3.0.2"
+  },
+  "license": "Apache-2.0"
+}

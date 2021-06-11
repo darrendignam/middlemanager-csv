@@ -1,0 +1,14 @@
+doctype html
+html(lang='en')
+    head
+        style. 
+            table, th, td{
+                border-bottom: 1px solid #eee;
+                border-right: 1px solid #eee;
+            }
+    body
+        h1 Upload CSV file below
+        form(action="/uploadcsv" method="post" enctype="multipart/form-data")
+            p Select file
+            input(type="file" name="csvfile")
+            input(type="submit")
