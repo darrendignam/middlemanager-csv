@@ -5,7 +5,7 @@ This app can process CSV files into the middlemanager middleware
 ## Example .env file (example values too)
 ```
 PORT=3000
-NODE_ENV='dvelopment'
+NODE_ENV='development'
 ENV_SPACE='middlemanager'
 MIDDLEMANAGER_URL='127.0.0.1:3001'
 MIDDLEMANAGER_KEY='54321'
