@@ -86,8 +86,6 @@ router.post('/', upload.single('csvfile'), function (req, res) {
                                 }
                             });
                         }
-
-
                     }
                 })), function (err, finalResult) {
                     if (err) {
@@ -174,9 +172,9 @@ function NewCheckIn( new_check_in, callback ){
         (_data_in,async_callback)=>{
             //(3) try and push this to a new order
 
-            CreateContract(new_check_in, _data_in, (err, _contract)=>{
+            CreateCheckIn(new_check_in, _data_in, (err, _contract)=>{
                 if(err){
-                    console.log("Err: CreateContract");
+                    console.log("Err: CreateCheckIn");
                     async_callback(err);
                 }else{
                     _data_in["contract"] = _contract; //add the result to the results object we have been building.
@@ -235,7 +233,7 @@ function CreateCustomer(_data_in, callback){
             }, callback );
 }
 
-function CreateContract(_new_check_in, _data_in, callback){
+function CreateCheckIn(_new_check_in, _data_in, callback){
     let order_details = {
         customerid:         _data_in.customer.custid, //This terrible naming of the custid is what the WFunction returns
         siteid:             _SITE,
@@ -254,6 +252,6 @@ function CreateContract(_new_check_in, _data_in, callback){
         notes:              [_new_check_in[0], _new_check_in[1], _new_check_in[4], _new_check_in[50], _new_check_in[53], _new_check_in[54]].join(', ') ,
     };
     //console.log(order_details);
-    mm.createNewContract(order_details, callback);
+    mm.createNewCheckIn(order_details, callback);
 }
 module.exports = router;
