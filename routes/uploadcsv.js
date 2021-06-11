@@ -226,10 +226,10 @@ function CreateCustomer(_data_in, callback){
                 "Add2": _data_in[30],
                 "Add3": _data_in[31],
                 "Town": _data_in[32],
-                "Postcode": _data_in[33],                
+                "Postcode": _data_in[33],
                 // "idob": null,
                 "inotes": [_data_in[0], _data_in[1], _data_in[4], _data_in[50], _data_in[53], _data_in[54]].join(', ') ,
-                "iemailaddress": _data_in[8],                        
+                "iemailaddress": _data_in[8],
             }, callback );
 }
 
@@ -246,10 +246,10 @@ function CreateCheckIn(_new_check_in, _data_in, callback){
         depositamount:      _new_check_in[2],
         amount:             _new_check_in[52]/100,
         vatcode:            _data_in.unit.VatCode,
-        paymentid:          'C1',
-        paymentref:         'CASH',
+        paymentid:          'C6',
+        paymentref:         'WorldPay',
         goodsvalue:         _new_check_in[40],
-        notes:              [_new_check_in[0], _new_check_in[1], _new_check_in[4], _new_check_in[50], _new_check_in[53], _new_check_in[54]].join(', ') ,
+        notes:              [_new_check_in[39], _new_check_in[0], _new_check_in[1], _new_check_in[4], _new_check_in[50], _new_check_in[53], _new_check_in[54]].join(', ') ,
     };
     //console.log(order_details);
     mm.createNewCheckIn(order_details, callback);
