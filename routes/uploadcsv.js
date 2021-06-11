@@ -47,35 +47,21 @@ router.post('/', upload.single('csvfile'), function (req, res) {
                     if (fileRows[i].length > 0) {
                         //push each row into middlemanager API, and save the reponses into a result array
                         validRows.push(fileRows[i]);
-
-                        // var date = new Date(fileRows[i][13]);
-                        // console.log( date.toString() );
-                        // console.log( formatDateYYYYMMDD( fileRows[i][13] ) );
                     }
                 }
-
 
                 //process the discovered rows of the CSV through the reservation W function
                 async ([function initializer(initArray) {
                     initArray(null, []); //prep an empty array for us to work with (in resultsArray)
                 }].concat(validRows.map(function (current_csv_row) {
                     return function (resultsArray, nextCallback) {
-
-                        //For Each Row in the input CSV.... current_csv_row
-                        //console.log(_unitSizecode(current_csv_row[3]));
-
                         //loop over the valid array items and try and push them into SM
                         // Booking ID,	Reservation Transaction ID,	Reservation Amount Paid,	Container Size,	Container ID,	Duration,	First Name,	Surname,	Email,	Telephone,	Weekly Price,	Offer Price,	Offer Duration,	Moving In Date,	Billing Title,	Billing First Name,	Billing Surname,	Billing Email Address,	Billing Company Name,	Billing Address Line One,	Billing Address Line Two,	Billing Address Line Three,	Billing City,	Billing PostCode,	Correspondance Title,	Correspondance First Name,	Correspondance Surname,	Correspondance Email Address,	Correspondance Company Name,	Correspondance Address Line One,	Correspondance Address Line Two,	Correspondance Address Line Three,	Correspondance City,	Correspondance PostCode,	Car Registration,	Mobile,	SMS Consent,	Photo ID Document,	Address ID Document,	Authorised Persons,	Insurance Amount,	Insurance Price,	Insurance Declined,	Insurance Proof Document,	Insurance Type,	DD Name,	DD Sort Code,	DD Account Number,	DD Consent,	DD Declined,	eSignDocumentId,	Optional Extras,	Upfront Payment Amount,	Upfront Transaction ID,	Upfront Transaction Date,
                         // 0            1                           2                           3               4               5           6           7           8       9           10              11              12              13              14              15                  16                  17                      18                      19                          20                          21                          22              23                  24                      25                          26                      27                              28                              29                                  30                                  31                                  32                      33                          34                  35      36              37                  38                      39                  40                  41                  42                  43                          44              45          46              47                  48          49              50                  51                  52                      53                      54                      
                         
-                        
                         //If this is a Reservation or a Check-In....??
                         //Upfrontpayment amount = [52]
                         //MoveInDate = 
-
-                        //console.log( current_csv_row[52] );
-
-
                         if(current_csv_row[52] == ""){
                             NewReservation( current_csv_row, (err, result)=>{
                                 if (err) {
