@@ -152,28 +152,32 @@ function NewCheckIn( new_check_in, callback ){
         },
         (_data_in,async_callback)=>{
             //(2) Get UnitID. Making a reservation will assign us a UnitID
-            // mm.getAvaliableUnit(_SITE, _unitSizecode(new_check_in[3]).SizeCodeID, (err,unit)=>{
-            //     if(err){
-            //         console.log("Err: getAvaliableUnit");
-            //         async_callback(err);
-            //     }else{
-            //         //console.log(unit);
-            //         _data_in["unit"] = unit;
-            //         if( _data_in.unit ){
-            //             //console.log(_data_in.unit);
-            //             async_callback(null, _data_in);
-            //         }else{
-            //             async_callback({"Error":"No Units found. The SIZECODE attached to this quote/order have all be rented out, but we have more under a different SIZECODE. Please call our office and we can find a comparable unit"});
-            //         }
-            //     }
-            // });
+            mm.getAvaliableUnit(_SITE, _unitSizecode(new_check_in[3]).SizeCodeID, (err,unit)=>{
+                if(err){
+                    console.log("Err: getAvaliableUnit");
+                    async_callback(err);
+                }else{
+                    //console.log(unit);
+                    _data_in["unit"] = unit; //not an array is this is a wrapper mm function that post processes the array internally
+                    if( _data_in.unit ){
+                        //console.log(_data_in.unit);
+                        async_callback(null, _data_in);
+                    }else{
+                        async_callback({"Error":"No Units found. The SIZECODE attached to this quote/order have all be rented out, but we have more under a different SIZECODE. Please call our office and we can find a comparable unit"});
+                    }
+                }
+            });
+        },
+
+        (_data_in,async_callback)=>{          
+            //(3) Make reservation from Customer and Unit
             let reservation_obj = {
                 iCustomerID: _data_in.customer.custid,
                 iSite: _SITE,
                 iReservedOn: _widgets.formatTodayYYYYMMDD(),//Date the user made the reservation in the front end. Not in the CSV so I will use today's date!
                 iMoveIn: _widgets.formatDateYYYYMMDD(new_check_in[13]),
-                //iUnit:''//can ignore this and let SM make the assignment
-                iSizecode:_unitSizecode(new_check_in[3]).SizeCodeID,
+                iUnit: _data_in.unit.UnitID,//can ignore this and let SM make the assignment
+                //iSizecode:_unitSizecode(new_check_in[3]).SizeCodeID,
                 iDepositAmt: new_check_in[2],
                 iVATAmt:1,
                 iPaymethod:'C6',    //called 'paymentid' in other SpaceManager functions SMH
@@ -184,13 +188,23 @@ function NewCheckIn( new_check_in, callback ){
             mm.MakeReservation(reservation_obj, (err, reservation_obj)=>{
                 console.log(err);
                 console.log(JSON.stringify( reservation_obj ));
-                //bug out!!
-                async_callback(reservation_obj);
+                
+                res_obj = reservation_obj[0];//always a single element array from the middelware driver
+                if(err){
+                    async_callback(err);
+                }else{
+                    if(res_obj.CustomerID && res_obj.ReservationID && res_obj.InvoiceID && res_obj.PaymentID){
+                        _data_in["reservation"] = res_obj;
+                        async_callback(null, _data_in);
+                    }else{
+                        async_callback(reservation_obj);
+                    }
+                }
             });
         },
         //TODO: Add more functions here to handle the images, the direct de bit, the additional authorised users, but for now, let's do the simple case.
         (_data_in,async_callback)=>{
-            //(3) try and push this to a new order
+            //(4) try and push this to a new order
 
             CreateCheckIn(new_check_in, _data_in, (err, _contract)=>{
                 if(err){
@@ -204,6 +218,7 @@ function NewCheckIn( new_check_in, callback ){
         },
     ],(err,final_result)=>{
         if(err){
+            //if you see something like// [{"'1'":"1"}]  //then it was the reservation that errored
             console.log("Err: New Checkin");
             callback(err);
         }else{
@@ -258,6 +273,7 @@ function CreateCheckIn(_new_check_in, _data_in, callback){
         customerid:         _data_in.customer.custid, //This terrible naming of the custid is what the WFunction returns
         siteid:             _SITE,
         unitid:             _data_in.unit.UnitID,
+        ireservationid:     _data_in.reservation.ReservationID,
         startdate:          _widgets.formatDateYYYYMMDD(_new_check_in[13]),
         chargetodate:       _widgets.itodateDateYYYYMMDD(_new_check_in[13]), // Set this to like 1 month from now, minus one day?? Format: YYYY-MM-DD
         invoicefrequency:   1,
