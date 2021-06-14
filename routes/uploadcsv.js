@@ -123,7 +123,7 @@ function NewReservation( new_reservation, callback ){
         Town: new_reservation[32],
         Postcode: new_reservation[33],
         // inumber:    req.body.phonenumber.replace('+','%2B'),
-        imovein: _widgets.formatDateYYYYMMDD(new_reservation[13]), //new_reservation[33] // need to convert this date to the correct format
+        imovein: _widgets.formatMonthTodayYYYYMMDD(), //new_reservation[33] // need to convert this date to the correct format //TODO: Correct this to one month from now
         isizecode: _unitSizecode(new_reservation[3]).SizeCodeID,
         idepositamt: new_reservation[2],
         ivatamt: 1, //meh, i dont know what to do here! 20% of a fiver is 1 right?
@@ -151,21 +151,41 @@ function NewCheckIn( new_check_in, callback ){
             });
         },
         (_data_in,async_callback)=>{
-            //(2) Get UnitID. Now we need to turn a sizecode into an actual UnitID
-            mm.getAvaliableUnit(_SITE, _unitSizecode(new_check_in[3]).SizeCodeID, (err,unit)=>{
-                if(err){
-                    console.log("Err: getAvaliableUnit");
-                    async_callback(err);
-                }else{
-                    //console.log(unit);
-                    _data_in["unit"] = unit;
-                    if( _data_in.unit ){
-                        //console.log(_data_in.unit);
-                        async_callback(null, _data_in);
-                    }else{
-                        async_callback({"Error":"No Units found. The SIZECODE attached to this quote/order have all be rented out, but we have more under a different SIZECODE. Please call our office and we can find a comparable unit"});
-                    }
-                }
+            //(2) Get UnitID. Making a reservation will assign us a UnitID
+            // mm.getAvaliableUnit(_SITE, _unitSizecode(new_check_in[3]).SizeCodeID, (err,unit)=>{
+            //     if(err){
+            //         console.log("Err: getAvaliableUnit");
+            //         async_callback(err);
+            //     }else{
+            //         //console.log(unit);
+            //         _data_in["unit"] = unit;
+            //         if( _data_in.unit ){
+            //             //console.log(_data_in.unit);
+            //             async_callback(null, _data_in);
+            //         }else{
+            //             async_callback({"Error":"No Units found. The SIZECODE attached to this quote/order have all be rented out, but we have more under a different SIZECODE. Please call our office and we can find a comparable unit"});
+            //         }
+            //     }
+            // });
+            let reservation_obj = {
+                iCustomerID: _data_in.customer.custid,
+                iSite: _SITE,
+                iReservedOn: _widgets.formatTodayYYYYMMDD(),//Date the user made the reservation in the front end. Not in the CSV so I will use today's date!
+                iMoveIn: _widgets.formatDateYYYYMMDD(new_check_in[13]),
+                //iUnit:''//can ignore this and let SM make the assignment
+                iSizecode:_unitSizecode(new_check_in[3]).SizeCodeID,
+                iDepositAmt: new_check_in[2],
+                iVATAmt:1,
+                iPaymethod:'C6',    //called 'paymentid' in other SpaceManager functions SMH
+                iPayRef:'WorldPay', //called 'paymentref' in other SM functions - sigh
+                iComment:[new_check_in[0], new_check_in[1], new_check_in[4], new_check_in[50], new_check_in[53], new_check_in[54]].join(', '),
+
+            }
+            mm.MakeReservation(reservation_obj, (err, reservation_obj)=>{
+                console.log(err);
+                console.log(JSON.stringify( reservation_obj ));
+                //bug out!!
+                async_callback(reservation_obj);
             });
         },
         //TODO: Add more functions here to handle the images, the direct de bit, the additional authorised users, but for now, let's do the simple case.
@@ -249,9 +269,10 @@ function CreateCheckIn(_new_check_in, _data_in, callback){
         paymentid:          'C6',
         paymentref:         'WorldPay',
         goodsvalue:         _new_check_in[40],
-        notes:              [_new_check_in[39], _new_check_in[0], _new_check_in[1], _new_check_in[4], _new_check_in[50], _new_check_in[53], _new_check_in[54]].join(', ') ,
+        notes:              [_new_check_in[39], _new_check_in[0], _new_check_in[1], _new_check_in[4], _new_check_in[50], _new_check_in[53], _new_check_in[54], _new_check_in[34] ].join(', ') ,
+
     };
     //console.log(order_details);
-    mm.createNewCheckIn(order_details, callback);
+    mm.CSV_CheckIn(order_details, callback);
 }
 module.exports = router;
