@@ -326,6 +326,16 @@ module.exports = {
     },
 
     /**
+     * Send object parameters to the API server to upload a file in base64 format.
+     * 
+     * @param {object} post_data - Object (See https://mm.tickertape.cc/api/v1/base/WInsertOLEDDocumentBase64) 
+     * @param {callback} callback_function- error and result
+     */
+     InsertOLEDDocumentBase64: function (post_data, callback) {
+        this.post_request("/api/v1/base/WInsertOLEDDocumentBase64", post_data, callback);
+    },
+
+    /**
      * Simple test function, just to make sure the API is running.
      * Will return immediatly and write is results into the node console.
      */
