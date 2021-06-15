@@ -48,24 +48,6 @@ let post_wrapper = function (api_function, post_data, callback) {
 
 module.exports = {
 
-    encodeBase64_URI : function(dateURI,callback){
-        needle.get(dateURI, { encoding: null }, function (error, response, body) {
-            if (!error && response.statusCode == 200) {
-                let raw = Buffer.from(body).toString('base64');
-                let data = "data:" + response.headers["content-type"] + ";base64," + raw;
-                //console.log(data);
-                
-                let result = {};
-                result["data"] = data;
-                result["raw"]  = raw;
- 
-                callback(null, result);
-            }else{
-                callback(error)
-            }
-        });
-    },
-
     //helper function for needle calls
 
     /**
@@ -346,11 +328,11 @@ module.exports = {
     /**
      * Send object parameters to the API server to upload a file in base64 format.
      * 
-     * @param {object} post_data - Object (See https://mm.tickertape.cc/api/v1/base/WInsertOLEDDocumentBase64) 
+     * @param {object} post_data - Object (See https://mm.tickertape.cc/api/v1/base/WInsertOLEDocumentBase64) 
      * @param {callback} callback_function- error and result
      */
-     InsertOLEDDocumentBase64: function (post_data, callback) {
-        this.post_request("/api/v1/base/WInsertOLEDDocumentBase64", post_data, callback);
+     InsertOLEDocumentBase64: function (post_data, callback) {
+        this.post_request("/api/v1/base/WInsertOLEDocumentBase64", post_data, callback);
     },
 
     /**
@@ -363,6 +345,36 @@ module.exports = {
                 console.error(err);
             };
             console.log(res.body);
+        });
+    },
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * This is a bit of an oddball function as it is not one that actually connects to the middlemanager - it grabs
+     * images or files from the web and streams them through a base64 encoder.
+     * 
+     * @param {string} dataURI - URI to a file online
+     * @param {callback} callback_function- error and result
+     */
+    encodeBase64_URI : function(dataURI,callback){
+        needle.get(dataURI, { encoding: null }, function (error, response, body) {
+            if (!error && response.statusCode == 200) {
+                let raw = Buffer.from(body).toString('base64');
+                let content_type = response.headers["content-type"];
+                let data = "data:" + content_type + ";base64," + raw;
+                //console.log(data);
+                
+                let result = {};
+                result["data"] = data;
+                result["raw"]  = raw;
+                result["content_type"] = content_type;
+ 
+                callback(null, result);
+            }else{
+                callback(error)
+            }
         });
     },
 

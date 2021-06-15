@@ -150,6 +150,41 @@ function NewCheckIn( new_check_in, callback ){
                 }
             });
         },
+
+        (_data_in,async_callback)=>{
+            //(1a) upload image 1
+            if(new_check_in[37]!=''){
+                mm.encodeBase64_URI(new_check_in[37], (err, result)=>{
+                    if(err){
+                        _data_in["photoid"] = JSON.stringify(err);
+                        async_callback(_data_in);
+                    }else{
+                        let img_obj = {
+                            iCustId: _data_in.customer.custid,
+                            iBlob: result.raw,
+                            iDescription:'Photo ID Document',
+                            iFileType:new_check_in[37].split('.').pop()
+                        };
+                        console.log( img_obj.iFileType );
+                        console.log( result.content_type );
+
+                        mm.InsertOLEDocumentBase64(img_obj,(err, response)=>{
+                            if(err){
+                                _data_in["photoid"] = JSON.stringify(err);
+                                async_callback(_data_in);
+                            }else{
+                                _data_in["photoid"] = JSON.stringify(response);
+                                async_callback(_data_in);
+                            }
+                        });
+                    }
+                });
+            }else{
+                _data_in["photoid"] = "none supplied";
+                async_callback(_data_in);
+            }
+        },
+
         (_data_in,async_callback)=>{
             //(2) Get UnitID. Making a reservation will assign us a UnitID
             mm.getAvaliableUnit(_SITE, _unitSizecode(new_check_in[3]).SizeCodeID, (err,unit)=>{
