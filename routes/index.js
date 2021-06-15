@@ -26,5 +26,16 @@ router.get('/', function(req, res, next) {
 	// });
 });
 
+/* GET home page. */
+router.get('/base64test', function(req, res, next) {
+	mm.encodeBase64_URI('http://darrendignam.com/img/boxd.png', (err, result)=>{
+		if(err){
+			res.json(err);
+		}else{
+			res.send('<img src="'+ result.data +'" alt="base64 img" />');
+		}
+	});
+});
+
 
 module.exports = router;

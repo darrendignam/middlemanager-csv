@@ -48,6 +48,24 @@ let post_wrapper = function (api_function, post_data, callback) {
 
 module.exports = {
 
+    encodeBase64_URI : function(dateURI,callback){
+        needle.get(dateURI, { encoding: null }, function (error, response, body) {
+            if (!error && response.statusCode == 200) {
+                let raw = Buffer.from(body).toString('base64');
+                let data = "data:" + response.headers["content-type"] + ";base64," + raw;
+                //console.log(data);
+                
+                let result = {};
+                result["data"] = data;
+                result["raw"]  = raw;
+ 
+                callback(null, result);
+            }else{
+                callback(error)
+            }
+        });
+    },
+
     //helper function for needle calls
 
     /**
