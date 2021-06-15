@@ -161,7 +161,7 @@ function NewCheckIn( new_check_in, callback ){
                     }else{
                         let img_obj = {
                             iCustId: _data_in.customer.custid,
-                            iBlob: result.raw,
+                            iBlob: result.raw, //raw gives success but still no image appearing in the DB
                             iDescription:'Photo ID Document',
                             iFileType:new_check_in[37].split('.').pop()
                         };
@@ -174,7 +174,7 @@ function NewCheckIn( new_check_in, callback ){
                                 async_callback(_data_in);
                             }else{
                                 _data_in["photoid"] = JSON.stringify(response);
-                                async_callback(_data_in);
+                                async_callback(null, _data_in);
                             }
                         });
                     }
