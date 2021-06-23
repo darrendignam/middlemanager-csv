@@ -28,7 +28,7 @@ router.get('/', function(req, res, next) {
 
 /* GET home page. */
 router.get('/base64test', function(req, res, next) {
-	mm.encodeBase64_URI('http://darrendignam.com/img/boxd.png', (err, result)=>{
+	mm.encodeBase64_URI('https://upload.wikimedia.org/wikipedia/commons/a/a4/Isometric_Pixel_Art_by_Peterson_Freitas_%28enlarged%29.gif', (err, result)=>{
 		if(err){
 			res.json(err);
 		}else{
