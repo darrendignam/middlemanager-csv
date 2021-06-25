@@ -26,7 +26,7 @@ router.get('/', function(req, res, next) {
 	// });
 });
 
-/* GET home page. */
+/* Test the ability of the code to process an image into a base64 string. */
 router.get('/base64test', function(req, res, next) {
 	mm.encodeBase64_URI('https://upload.wikimedia.org/wikipedia/commons/a/a4/Isometric_Pixel_Art_by_Peterson_Freitas_%28enlarged%29.gif', (err, result)=>{
 		if(err){
