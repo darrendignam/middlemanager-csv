@@ -4,6 +4,8 @@ var router = express.Router();
 var async = require('async-waterfall');
 
 var mm = require('../utility/mm-wrapper');
+var mmLookup = require('../utility/mm-id-lookup');
+
 var _unitData = require('../utility/unit-data');
 var _unitSizecode = require('../utility/unit-sizecode');
 var _widgets = require('../utility/widgets')
@@ -16,9 +18,26 @@ const csv = require('fast-csv');
 const { strict } = require('assert');
 const upload = multer({ dest: 'uploadedcsv/' });
 
-//TODO - this site is hardcoded in - but needs to come from the CSV
-const _SITE = "RI1GRWXX250320060000";
+//TODO - this site is hardcoded in - but needs to come from the CSV or settings
+// const _SITE = "RI1GRWXX250320060000";
 
+// const _EMAIL     = process.env.CONTACT_ID_EMAIL;
+// const _MOBILE    = process.env.CONTACT_ID_MOBILE;
+// const _TELEPHONE = process.env.CONTACT_ID_TELEPHONE;
+
+    //   http://192.168.1.165:3000/api/v1/base/WGetContactType
+    // {
+    //   "phonetypeid": "RI16CTRI08022018007N",
+    //   "description": "Email"
+    // },
+    // {
+    //   "phonetypeid": "RI16CXRI08022018007O",
+    //   "description": "Mobile"
+    // },
+    // {
+    //   "phonetypeid": "RI16D1RI08022018007P",
+    //   "description": "Telephone"
+    // },
 
 
 router.get('/', function (req, res) {
@@ -31,6 +50,9 @@ router.post('/', upload.single('csvfile'), function (req, res) {
     const fileRows = [];
     const validRows = [];
     const responseRows = [];
+
+    let contactData = [];
+    let siteData = [];
 
     if (req.file && req.file.path) {
         csv.parseFile(req.file.path)
@@ -50,51 +72,90 @@ router.post('/', upload.single('csvfile'), function (req, res) {
                     }
                 }
 
-                //process the discovered rows of the CSV through the reservation W function
-                async ([function initializer(initArray) {
-                    initArray(null, []); //prep an empty array for us to work with (in resultsArray)
-                }].concat(validRows.map(function (current_csv_row) {
-                    return function (resultsArray, nextCallback) {
-                        //loop over the valid array items and try and push them into SM
-                        // Booking ID,	Reservation Transaction ID,	Reservation Amount Paid,	Container Size,	Container ID,	Duration,	First Name,	Surname,	Email,	Telephone,	Weekly Price,	Offer Price,	Offer Duration,	Moving In Date,	Billing Title,	Billing First Name,	Billing Surname,	Billing Email Address,	Billing Company Name,	Billing Address Line One,	Billing Address Line Two,	Billing Address Line Three,	Billing City,	Billing PostCode,	Correspondance Title,	Correspondance First Name,	Correspondance Surname,	Correspondance Email Address,	Correspondance Company Name,	Correspondance Address Line One,	Correspondance Address Line Two,	Correspondance Address Line Three,	Correspondance City,	Correspondance PostCode,	Car Registration,	Mobile,	SMS Consent,	Photo ID Document,	Address ID Document,	Authorised Persons,	Insurance Amount,	Insurance Price,	Insurance Declined,	Insurance Proof Document,	Insurance Type,	DD Name,	DD Sort Code,	DD Account Number,	DD Consent,	DD Declined,	eSignDocumentId,	Optional Extras,	Upfront Payment Amount,	Upfront Transaction ID,	Upfront Transaction Date,
-                        // 0            1                           2                           3               4               5           6           7           8       9           10              11              12              13              14              15                  16                  17                      18                      19                          20                          21                          22              23                  24                      25                          26                      27                              28                              29                                  30                                  31                                  32                      33                          34                  35      36              37                  38                      39                  40                  41                  42                  43                          44              45          46              47                  48          49              50                  51                  52                      53                      54                      
-                        
-                        //If this is a Reservation or a Check-In....??
-                        //Upfrontpayment amount = [52]
-                        //MoveInDate = 
-                        if(current_csv_row[52] == ""){
-                            NewReservation( current_csv_row, (err, result)=>{
-                                if (err) {
-                                    nextCallback(err);
-                                } else {
-                                    //result is: //[{"CustomerID":"RI2168H253100007H000","ReservationID":"RI2168H253100007H002","InvoiceID":"SM000QOF","PaymentID":"SM000QOG"}]
-                                    let tmp_result = result[0];          //this returns an array of length 1. So to make the full results array 'nicer' I de reference the first item out of it.
-                                    //TODO: add some additional fields make tabulation easier....??
-
-                                    resultsArray.push(tmp_result);     
-                                    nextCallback(null, resultsArray);
-                                    
-                                }
-                            });
-                        }else{
-                            NewCheckIn( current_csv_row, (err, result)=>{
-                                if (err) {
-                                    nextCallback(err);
-                                } else {
-                                    resultsArray.push(result);     
-                                    nextCallback(null, resultsArray);                                    
-                                }
-                            });
-                        }
-                    }
-                })), function (err, finalResult) {
+                // Get the IDs from the SM database so we dont have to have them hard coded everywhere!!
+                async([  
+                    function(callback){
+                        mmLookup.getSiteData((err, siteData)=>{
+                            if(err){
+                                callback(err);
+                            }else{
+                                callback(null, siteData);
+                            }
+                        });
+                    },
+                    function(_incomingSiteData, callback){
+                        mmLookup.getContactData((err, contactdata)=>{
+                            if(err){
+                                callback(err);
+                            }else{
+                                callback(null, [contactdata, _incomingSiteData]);
+                            }
+                        });
+                    },
+                ], function(err, spacemanagerIDs){
                     if (err) {
                         res.json(err);
                     } else {
-                        res.json(finalResult);
+                        //save the data
+                        contactData = spacemanagerIDs[0];
+                        siteData = spacemanagerIDs[1];
+
+                        //process all the valid rows....
+                        
+                        //process the discovered rows of the CSV through the reservation W function
+                        async([function initializer(initArray) {
+                            initArray(null, []); //prep an empty array for us to work with (in resultsArray)
+                        }].concat(validRows.map(function (current_csv_row) {
+                            return function (resultsArray, nextCallback) {
+                                                                    //loop over the valid array items and try and push them into SM
+                                                                    // Booking ID,	Reservation Transaction ID,	Reservation Amount Paid,	Container Size,	Container ID,	Duration,	First Name,	Surname,	Email,	Telephone,	Weekly Price,	Offer Price,	Offer Duration,	Moving In Date,	Billing Title,	Billing First Name,	Billing Surname,	Billing Email Address,	Billing Company Name,	Billing Address Line One,	Billing Address Line Two,	Billing Address Line Three,	Billing City,	Billing PostCode,	Correspondance Title,	Correspondance First Name,	Correspondance Surname,	Correspondance Email Address,	Correspondance Company Name,	Correspondance Address Line One,	Correspondance Address Line Two,	Correspondance Address Line Three,	Correspondance City,	Correspondance PostCode,	Car Registration,	Mobile,	SMS Consent,	Photo ID Document,	Address ID Document,	Authorised Persons,	Insurance Amount,	Insurance Price,	Insurance Declined,	Insurance Proof Document,	Insurance Type,	DD Name,	DD Sort Code,	DD Account Number,	DD Consent,	DD Declined,	eSignDocumentId,	Optional Extras,	Upfront Payment Amount,	Upfront Transaction ID,	Upfront Transaction Date,
+                                                                    // 0            1                           2                           3               4               5           6           7           8       9           10              11              12              13              14              15                  16                  17                      18                      19                          20                          21                          22              23                  24                      25                          26                      27                              28                              29                                  30                                  31                                  32                      33                          34                  35      36              37                  38                      39                  40                  41                  42                  43                          44              45          46              47                  48          49              50                  51                  52                      53                      54                      
+                                
+
+                                // New CSV Order:
+                                // Type,    Booking ID, Reservation Transaction ID, Reservation Amount Paid,    Container Size, Container ID,   Size Code,	Location Code,	Duration,   First Name,	Surname,	Email,	Telephone,	Weekly Price,	Offer Price,	Offer Duration,	Moving In Date,	Billing Title,	Billing First Name,	Billing Surname,	Billing Email Address,	Billing Company Name,	Billing Address Line One,	Billing Address Line Two,	Billing Address Line Three,	Billing City,	Billing PostCode,	Correspondance Title,	Correspondance First Name,	Correspondance Surname,	Correspondance Email Address,	Correspondance Company Name,	Correspondance Address Line One,	Correspondance Address Line Two,	Correspondance Address Line Three,	Correspondance City,	Correspondance PostCode,	Car Registration,	Mobile,	SMS Consent,	Photo ID Document,	Address ID Document,	Authorised Persons,	Insurance Amount,	Insurance Price,	Insurance Declined,	Insurance Proof Document,	Insurance Type,	DD Name,	DD Sort Code,	DD Account Number,	DD Consent,	DD Declined,	eSignDocumentId,	Optional Extras,	Upfront Payment Amount,	Upfront Transaction ID,	Upfront Transaction Date,	1,	2,	3,
+                                // 0        1           2                           3                           4               5               6           7               8           9           10          11      12          13              14              15              16              17              18                  19                  20                      21                      22                          23                          24                          25              26                  27                      28                          29                      30                              31                              32                                  33                                  34                                  35                      36                          37                  38      39              40                  41                      42                  43                  44                  45                  46                          47              48          49              50                  51          52              53                  54                  55                      56                      57                          58  59  60
+
+
+                                //If this is a Reservation or a Check-In....??
+                                //Upfrontpayment amount = [52]
+                                //MoveInDate = 
+                                if(current_csv_row[52] == ""){
+                                    NewReservation( current_csv_row, (err, result)=>{
+                                        if (err) {
+                                            nextCallback(err);
+                                        } else {
+                                            //result is: //[{"CustomerID":"RI2168H253100007H000","ReservationID":"RI2168H253100007H002","InvoiceID":"SM000QOF","PaymentID":"SM000QOG"}]
+                                            let tmp_result = result[0];          //this returns an array of length 1. So to make the full results array 'nicer' I de reference the first item out of it.
+                                            //TODO: add some additional fields make tabulation easier....??
+
+                                            resultsArray.push(tmp_result);     
+                                            nextCallback(null, resultsArray);
+                                            
+                                        }
+                                    });
+                                }else{
+                                    NewCheckIn( current_csv_row, (err, result)=>{
+                                        if (err) {
+                                            nextCallback(err);
+                                        } else {
+                                            resultsArray.push(result);     
+                                            nextCallback(null, resultsArray);                                    
+                                        }
+                                    });
+                                }
+                            }
+                        })), function (err, finalResult) {
+                            if (err) {
+                                res.json(err);
+                            } else {
+                                //res.json(finalResult);
+                                res.render('data/data_table', {data:finalResult}); //need top pretty print this stuff in the pug...??
+                            }
+                        });
                     }
                 });
-            });
+            });// on "end" 
     }
 });
 
