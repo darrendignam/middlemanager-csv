@@ -26,4 +26,26 @@ module.exports = {
             }
         });
     },
+    //returns:
+    // [{
+    //   "phonetypeid": "RI16CTRI08022018007N",
+    //   "description": "Email"
+    // },
+    // {
+    //   "phonetypeid": "RI16CXRI08022018007O",
+    //   "description": "Mobile"
+    // },]
+
+    returnContactId: (_description, _arr) => {
+        let output = "";
+        for(let i; i<arr.length; i++){
+            if(arr[i].description && arr[i].phonetypeid && arr[i].description == _description){
+                output = arr[i].phonetypeid;
+                break;
+            }
+        }
+        return output;
+    }
+
+
 };
