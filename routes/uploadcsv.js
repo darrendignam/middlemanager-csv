@@ -118,9 +118,9 @@ router.post('/', upload.single('csvfile'), function (req, res) {
 
 
                                 //If this is a Reservation or a Check-In....??
-                                //Upfrontpayment amount = [52]
+                                //Upfrontpayment amount = [55]
                                 //MoveInDate = 
-                                if(current_csv_row[52] == ""){
+                                if(current_csv_row[55] == ""){
                                     NewReservation( current_csv_row, (err, result)=>{
                                         if (err) {
                                             nextCallback(err);
@@ -216,8 +216,8 @@ function NewCheckIn( new_check_in, callback ){
 
         (_data_in,async_callback)=>{
             //(1a) upload image 1
-            if(new_check_in[37]!=''){
-                mm.encodeBase64_URI(new_check_in[37], (err, result)=>{
+            if(new_check_in[40]!=''){
+                mm.encodeBase64_URI(new_check_in[40], (err, result)=>{
                     if(err){
                         _data_in["photoid"] = JSON.stringify(err);
                         async_callback(_data_in);
@@ -226,7 +226,7 @@ function NewCheckIn( new_check_in, callback ){
                             iCustId: _data_in.customer.custid,
                             iBlob: result.raw, //raw gives success but still no image appearing in the DB
                             iDescription:'Photo ID Document',
-                            iFileType:new_check_in[37].split('.').pop()
+                            iFileType:new_check_in[40].split('.').pop()
                         };
                         console.log( img_obj.iFileType );
                         console.log( result.content_type );
@@ -250,7 +250,7 @@ function NewCheckIn( new_check_in, callback ){
 
         (_data_in,async_callback)=>{
             //(2) Get UnitID. Making a reservation will assign us a UnitID
-            mm.getAvaliableUnit(_SITE, _unitSizecode(new_check_in[3]).SizeCodeID, (err,unit)=>{
+            mm.getAvaliableUnit(_SITE, _unitSizecode(new_check_in[4]).SizeCodeID, (err,unit)=>{ //TODO: Use the new Utility Here to get the ID for the sizecode
                 if(err){
                     console.log("Err: getAvaliableUnit");
                     async_callback(err);
@@ -273,14 +273,14 @@ function NewCheckIn( new_check_in, callback ){
                 iCustomerID: _data_in.customer.custid,
                 iSite: _SITE,
                 iReservedOn: _widgets.formatTodayYYYYMMDD(),//Date the user made the reservation in the front end. Not in the CSV so I will use today's date!
-                iMoveIn: _widgets.formatDateYYYYMMDD(new_check_in[13]),
+                iMoveIn: _widgets.formatDateYYYYMMDD(new_check_in[16]),
                 iUnit: _data_in.unit.UnitID,//can ignore this and let SM make the assignment
                 //iSizecode:_unitSizecode(new_check_in[3]).SizeCodeID,
-                iDepositAmt: new_check_in[2],
+                iDepositAmt: new_check_in[3],
                 iVATAmt:1,
                 iPaymethod:'C6',    //called 'paymentid' in other SpaceManager functions SMH
                 iPayRef:'WorldPay', //called 'paymentref' in other SM functions - sigh
-                iComment:[new_check_in[0], new_check_in[1], new_check_in[4], new_check_in[50], new_check_in[53], new_check_in[54]].join(', '),
+                iComment:[new_check_in[0], new_check_in[1], new_check_in[2], new_check_in[4], new_check_in[5], new_check_in[53], new_check_in[56], new_check_in[57]].join(', '),
 
             }
             mm.MakeReservation(reservation_obj, (err, reservation_obj)=>{
@@ -300,7 +300,7 @@ function NewCheckIn( new_check_in, callback ){
                 }
             });
         },
-        //TODO: Add more functions here to handle the images, the direct de bit, the additional authorised users, but for now, let's do the simple case.
+        //TODO: Add more functions here to handle the images, the direct debit, the additional authorised users, but for now, let's do the simple case.
         (_data_in,async_callback)=>{
             //(4) try and push this to a new order
 
@@ -346,23 +346,23 @@ function CreateCustomer(_data_in, callback){
             //create new spaceman user
             mm.addCustomer({
                 "idoreturn": 1, //return CustomerID (true / false)
-                "isite": _SITE,
-                "isurname": _data_in[16],
-                "iforenames": _data_in[15],
-                "ititle": _data_in[14],
-                "iAdd1": _data_in[19],
-                "iAdd2": _data_in[20],
-                "iAdd3": _data_in[21],
-                "iTown": _data_in[22],
-                "iPostcode": _data_in[23],
-                "Add1": _data_in[29],
-                "Add2": _data_in[30],
-                "Add3": _data_in[31],
-                "Town": _data_in[32],
-                "Postcode": _data_in[33],
+                "isite": _SITE,//TODO: Use our new functions to get this value
+                "isurname": _data_in[19],
+                "iforenames": _data_in[18],
+                "ititle": _data_in[17],
+                "iAdd1": _data_in[22],
+                "iAdd2": _data_in[23],
+                "iAdd3": _data_in[24],
+                "iTown": _data_in[25],
+                "iPostcode": _data_in[26],
+                "Add1": _data_in[32],
+                "Add2": _data_in[33],
+                "Add3": _data_in[34],
+                "Town": _data_in[35],
+                "Postcode": _data_in[36],
                 // "idob": null,
-                "inotes": [_data_in[0], _data_in[1], _data_in[4], _data_in[50], _data_in[53], _data_in[54]].join(', ') ,
-                "iemailaddress": _data_in[8],
+                "inotes": [_data_in[42], _data_in[0], _data_in[1], _data_in[2], _data_in[4], _data_in[5], _data_in[6], _data_in[53], _data_in[56], _data_in[57]].join(', ') ,
+                "iemailaddress": _data_in[11],
             }, callback );
 }
 
@@ -372,19 +372,19 @@ function CreateCheckIn(_new_check_in, _data_in, callback){
         siteid:             _SITE,
         unitid:             _data_in.unit.UnitID,
         ireservationid:     _data_in.reservation.ReservationID,
-        startdate:          _widgets.formatDateYYYYMMDD(_new_check_in[13]),
-        chargetodate:       _widgets.itodateDateYYYYMMDD(_new_check_in[13]), // Set this to like 1 month from now, minus one day?? Format: YYYY-MM-DD
+        startdate:          _widgets.formatDateYYYYMMDD(_new_check_in[16]),
+        chargetodate:       _widgets.itodateDateYYYYMMDD(_new_check_in[16]), // Set this to like 1 month from now, minus one day?? Format: YYYY-MM-DD
         invoicefrequency:   1,
         invfreqtype:        'W',
-        rateamount:         _new_check_in[10],
-        depositamount:      _new_check_in[2],
-        amount:             _new_check_in[52]/100,
+        rateamount:         _new_check_in[13],
+        depositamount:      _new_check_in[3],
+        amount:             _new_check_in[55]/100,  //TODO: Does this need to be -5 (minus 5) as £5 went to the reservation?
         vatcode:            _data_in.unit.VatCode,
         paymentid:          'C6',
         paymentref:         'WorldPay',
-        goodsvalue:         _new_check_in[40],
-        salesitems:         _new_check_in[51],
-        notes:              [_new_check_in[39], _new_check_in[0], _new_check_in[1], _new_check_in[4], _new_check_in[50], _new_check_in[53], _new_check_in[54], _new_check_in[34] ].join(', ') ,
+        goodsvalue:         _new_check_in[43],
+        salesitems:         _new_check_in[54],
+        notes:              [_new_check_in[42], _new_check_in[0], _new_check_in[1], _new_check_in[4],_new_check_in[5],_new_check_in[6], _new_check_in[53], _new_check_in[56], _new_check_in[57], _new_check_in[37] ].join(', ') ,
 
     };
     //console.log(order_details);
