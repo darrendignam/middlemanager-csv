@@ -1,0 +1,21 @@
+doctype html
+html(lang='en')
+    head
+        style. 
+            table{
+                width:100%;
+            }
+            table, th, td{
+                border-bottom: 1px solid #eee;
+                border-right: 1px solid #eee;
+            }
+    body
+        table
+            tr
+                for [key, value] of Object.entries( data[0] )
+                    th= key
+
+            each unit of data
+                tr
+                    for [key, cell] of Object.entries( unit )
+                        td= cell
