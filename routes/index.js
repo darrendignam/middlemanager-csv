@@ -4,6 +4,7 @@ var router = express.Router();
 var async = require('async-waterfall');
 
 var mm = require('../utility/mm-wrapper');
+var idLookup = require('../utility/mm-id-lookup');
 var _unitData = require('../utility/unit-data');
 var _unitSizecode = require('../utility/unit-sizecode');
 
@@ -33,6 +34,17 @@ router.get('/base64test', function(req, res, next) {
 			res.json(err);
 		}else{
 			res.send('<img src="'+ result.data +'" alt="base64 img" />');
+		}
+	});
+});
+
+
+router.get('/test-id-lookup', function(req, res, next) {
+	idLookup.getSiteData((err, data)=>{
+		if(err){
+			res.json(err);
+		}else{
+			res.json(data);
 		}
 	});
 });

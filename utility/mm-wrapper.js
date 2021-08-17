@@ -241,6 +241,16 @@ module.exports = {
     },
 
     /**
+     * Get the IDs of the contact types
+     * 
+     * @param {object} post_data - Object {"TheType":"searchstring"} leave a blank string to get all types
+     * @param {callback} callback_function- error and result
+     */
+     getContactType: function (post_data, callback) {
+        this.post_request("/api/v1/base/WGetContactType", post_data, callback);
+    },    
+
+    /**
      * Send iSite and/or iSize parameters to the API server.
      * 
      * @param {object} post_data - Object {"iSite":"id", "iSize":"id"} that will become the post vars. iSize is optional
