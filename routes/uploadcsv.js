@@ -120,6 +120,8 @@ router.post('/', upload.single('csvfile'), function (req, res) {
                                 //If this is a Reservation or a Check-In....??
                                 //Upfrontpayment amount = [55]
                                 //MoveInDate = 
+
+                                //TODO: Perhaps use column 0 to do this now - as it has a field to say explicity what the  row represents
                                 if(current_csv_row[55] == ""){
                                     NewReservation( current_csv_row, (err, result)=>{
                                         if (err) {
