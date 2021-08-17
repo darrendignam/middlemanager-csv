@@ -169,28 +169,28 @@ function NewReservation( new_reservation, callback ){
     // construct the data to send to the WFunction
     let reservation_obj = {
         isite: _SITE, //no site so we make an assumption here it is the main location
-        isurname: new_reservation[16],
-        iforenames: new_reservation[15],
-        ititle: new_reservation[14],
-        iAdd1: new_reservation[19],
-        iAdd2: new_reservation[20],
-        iAdd3: new_reservation[21],
-        iTown: new_reservation[22],
-        iPostcode: new_reservation[23],
-        iemailaddress: new_reservation[8],
-        Add1: new_reservation[29],
-        Add2: new_reservation[30],
-        Add3: new_reservation[31],
-        Town: new_reservation[32],
-        Postcode: new_reservation[33],
-        // inumber:    req.body.phonenumber.replace('+','%2B'),
+        isurname: new_reservation[19],
+        iforenames: new_reservation[18],
+        ititle: new_reservation[17],
+        iAdd1: new_reservation[22],
+        iAdd2: new_reservation[23],
+        iAdd3: new_reservation[24],
+        iTown: new_reservation[25],
+        iPostcode: new_reservation[26],
+        iemailaddress: new_reservation[11],
+        Add1: new_reservation[32],
+        Add2: new_reservation[33],
+        Add3: new_reservation[34],
+        Town: new_reservation[35],
+        Postcode: new_reservation[36],
+        // inumber:    req.body.phonenumber.replace('+','%2B'), //TODO: Use the new methods to add this number to the CUSTOMER later on.
         imovein: _widgets.formatMonthTodayYYYYMMDD(), //new_reservation[33] // need to convert this date to the correct format //TODO: Correct this to one month from now
-        isizecode: _unitSizecode(new_reservation[3]).SizeCodeID,
-        idepositamt: new_reservation[2],
-        ivatamt: 1, //meh, i dont know what to do here! 20% of a fiver is 1 right?
+        isizecode: _unitSizecode(new_reservation[4]).SizeCodeID,//TODO: Use the new methods to get this ID form the sizecode, not from the description
+        idepositamt: new_reservation[3],
+        ivatamt: 1, //meh, 1 dont know what to do here! 20% of a fiver is 1 right?
         // ipaymethod: req.body.ipaymethod,
         ipayref: 'creditcard',
-        icomment: [new_reservation[0], new_reservation[1], new_reservation[4], new_reservation[50], new_reservation[53], new_reservation[54]].join(', '),
+        icomment: [new_reservation[0], new_reservation[1], new_reservation[2], new_reservation[4], new_reservation[5], new_reservation[53], new_reservation[56], new_reservation[57]].join(', '),
     }
     mm.addCustomerWithReservation(reservation_obj, callback); //don't do anthing with the {err, result} returned by the mm function, let the calling process above handle it.
 }
