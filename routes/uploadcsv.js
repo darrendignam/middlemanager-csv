@@ -129,6 +129,8 @@ router.post('/', upload.single('csvfile'), function (req, res) {
                                             let tmp_result = result[0];          //this returns an array of length 1. So to make the full results array 'nicer' I de reference the first item out of it.
                                             //TODO: add some additional fields make tabulation easier....??
 
+                                            // TODO: add in the feature to add the phone and email as IContactTypes
+
                                             resultsArray.push(tmp_result);     
                                             nextCallback(null, resultsArray);
                                             
