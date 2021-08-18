@@ -19,7 +19,7 @@ const { strict } = require('assert');
 const upload = multer({ dest: 'uploadedcsv/' });
 
 //TODO - this site is hardcoded in - but needs to come from the CSV or settings
-// const _SITE = "RI1GRWXX250320060000";
+const _SITE = "RI1GRWXX250320060000";
 
 // const _EMAIL     = process.env.CONTACT_ID_EMAIL;
 // const _MOBILE    = process.env.CONTACT_ID_MOBILE;
@@ -211,6 +211,8 @@ function NewCheckIn( new_check_in, callback ){
                     console.log("Err: CreateCustomer");
                     async_callback(err);
                 }else{
+                    console.log("_customer")
+                    console.log(_customer)
                     async_callback(null, { "customer" : _customer[0] }); //again, returns an array of length 1 - so just return the object
                 }
             });
@@ -345,6 +347,9 @@ function NewCheckIn( new_check_in, callback ){
 }
 
 function CreateCustomer(_data_in, callback){
+    async([
+        //step 1 create customer
+        function(callback) {
             //create new spaceman user
             mm.addCustomer({
                 "idoreturn": 1, //return CustomerID (true / false)
@@ -366,6 +371,31 @@ function CreateCustomer(_data_in, callback){
                 "inotes": [_data_in[42], _data_in[0], _data_in[1], _data_in[2], _data_in[4], _data_in[5], _data_in[6], _data_in[53], _data_in[56], _data_in[57]].join(', ') ,
                 "iemailaddress": _data_in[11],
             }, callback );
+        },
+        //add mobile phone
+        function(_customer, callback){
+            //if the above is correct - do a phonme number import:
+            mm.post_request("/api/v1/base/WManageContact",
+                {
+                    "icustomerid": _customer[0].custid, 
+                    /*"iphoneid":"null",*/ 
+                    "itypeid":"RI16CXRI08022018007O", 
+                    "inumber": _data_in[12],
+                },(err, _newContact)=>{
+                    console.log("[][][][][][] NEW MOBILE [][][][][]");
+                    console.log(err);
+                    console.log(_newContact);
+                    //console.log( _customer[0].custid );
+
+                    callback(null, _customer);
+                }
+            );
+        }
+    ], function(err, data){
+
+        //for now send back the old style customer array, but will refactor this to be the new object of customer and contacts.
+        callback(err, data);
+    });
 }
 
 function CreateCheckIn(_new_check_in, _data_in, callback){
