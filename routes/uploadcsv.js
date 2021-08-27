@@ -211,8 +211,6 @@ function NewCheckIn( new_check_in, callback ){
                     console.log("Err: CreateCustomer");
                     async_callback(err);
                 }else{
-                    console.log("_customer")
-                    console.log(_customer)
                     async_callback(null, { "customer" : _customer[0] }); //again, returns an array of length 1 - so just return the object
                 }
             });
@@ -223,6 +221,7 @@ function NewCheckIn( new_check_in, callback ){
             if(new_check_in[40]!=''){
                 mm.encodeBase64_URI(new_check_in[40], (err, result)=>{
                     if(err){
+                        console.log("Err: encodeBase64");
                         _data_in["photoid"] = JSON.stringify(err);
                         async_callback(_data_in);
                     }else{
@@ -237,11 +236,14 @@ function NewCheckIn( new_check_in, callback ){
 
                         mm.InsertOLEDocumentBase64(img_obj,(err, response)=>{
                             if(err){
+                                console.log("Err: InsertOLED");
                                 _data_in["photoid"] = JSON.stringify(err);
-                                async_callback(_data_in);
+                                _data_in["err"] = "oled404" ;
+                                async_callback(null, _data_in);
                             }else{
                                 _data_in["photoid"] = JSON.stringify(response);
                                 async_callback(null, _data_in);
+                                // async_callback(_data_in);
                             }
                         });
                     }
@@ -293,6 +295,7 @@ function NewCheckIn( new_check_in, callback ){
                 
                 res_obj = reservation_obj[0];//always a single element array from the middelware driver
                 if(err){
+                    console.log("Err: MakeRes")
                     async_callback(err);
                 }else{
                     if(res_obj.CustomerID && res_obj.ReservationID && res_obj.InvoiceID && res_obj.PaymentID){
@@ -321,7 +324,7 @@ function NewCheckIn( new_check_in, callback ){
     ],(err,final_result)=>{
         if(err){
             //if you see something like// [{"'1'":"1"}]  //then it was the reservation that errored
-            console.log("Err: New Checkin");
+            console.log("Err: New Checkin: "+ JSON.stringify(err));
             callback(err);
         }else{
             //console.log(final_result);
