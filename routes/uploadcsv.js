@@ -256,18 +256,15 @@ function NewCheckIn( new_check_in, callback ){
 
                         mm.InsertOLEDocumentBase64(img_obj,(err, response)=>{
                             if(err){
-                                console.log("Err: InsertOLED");
-                                _data_in["photoid"] = JSON.stringify(err);
+                                console.log(`Err: InsertOLED : ${ JSON.stringify(err) }`);
+                                // _data_in["photoid"] = JSON.stringify(err);//Possibly just return ERROR as a string here....?
+                                _data_in["photoid"] = "ERROR";
                                 _data_in["err"] = "oled404" ;
                                 async_callback(null, _data_in);
                             }else{
-                                // _data_in["photoid"] = JSON.stringify(response);
-                                console.log(`photoid ${response}`);
-                                _data_in["photoid"] = JSON.stringify("SUCCESS");
-                                
-                                
+                                // _data_in["photoid"] = JSON.stringify(response); //weird object returned that messes up the parser. The literal string is: [{"'SUCCESS'":"SUCCESS"}]
+                                _data_in["photoid"] = "SUCCESS";
                                 async_callback(null, _data_in);
-                                // async_callback(_data_in);
                             }
                         });
                     }
