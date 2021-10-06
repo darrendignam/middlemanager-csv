@@ -44,7 +44,11 @@ router.get('/test-id-lookup', function(req, res, next) {
 		if(err){
 			res.json(err);
 		}else{
-			res.json(data);
+			let site_data = data;
+
+			let _id = idLookup.returnSiteId("Twenty4 Container Hire", site_data)
+
+			res.json({"data":data, " id":_id});
 		}
 	});
 });

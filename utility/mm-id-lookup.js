@@ -36,6 +36,18 @@ module.exports = {
     //   "description": "Mobile"
     // },]
 
+    returnSiteId: (_site_name, _site_data)=>{
+        let _result = "ERROR";
+
+        for(let i = 0; i < _site_data.length; i++){
+            if( _site_data[i].name == _site_name ){
+                _result = _site_data[i].details.siteid;
+            }
+        }
+
+        return _result;
+    },
+
     returnContactId: (_description, _arr) => {
         let output = "";
         for(let i; i<arr.length; i++){
