@@ -341,8 +341,13 @@ module.exports = {
      * @param {object} post_data - Object (See https://mm.tickertape.cc/api/v1/base/WInsertOLEDocumentBase64) 
      * @param {callback} callback_function- error and result
      */
-     InsertOLEDocumentBase64: function (post_data, callback) {
-        this.post_request("/api/v1/base/WInsertOLEDocumentBase64", post_data, callback);
+    InsertOLEDocumentBase64: function (post_data, callback) {
+        console.log(`InsertOLEDocumentBase64: ${post_data.iFileType}`);
+        // this.post_request("/api/v1/base/WInsertOLEDocumentBase64", post_data, callback);
+        needle("post", `${server_url}$/api/v1/base/WInsertOLEDocumentBase64`, post_data, function (err, res) {
+            //console.log(`InsertOLEDocumentBase64 ERR : ${err} RES : ${res}`);
+            callback(err, res);
+        });
     },
 
     /**
@@ -380,6 +385,8 @@ module.exports = {
                 result["data"] = data;
                 result["raw"]  = raw;
                 result["content_type"] = content_type;
+
+                console.log(`b64: ${result.content_type}`);
  
                 callback(null, result);
             }else{

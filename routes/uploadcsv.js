@@ -55,8 +55,10 @@ router.post('/', upload.single('csvfile'), function (req, res) {
     let siteData = [];
 
     if (req.file && req.file.path) {
+        //                                                  This might be an option: csv.parseFile(req.file.path, {headers: true}) with the 'headers' option enabled, we get named objects - but the lates CSV file is full of tabs, so the code breaks...
         csv.parseFile(req.file.path)
             .on("data", (data) => {
+                //console.log(data);
                 fileRows.push(data); // push each row
             })
             .on("end", () => {
@@ -99,6 +101,10 @@ router.post('/', upload.single('csvfile'), function (req, res) {
                         //save the data
                         contactData = spacemanagerIDs[0];
                         siteData = spacemanagerIDs[1];
+                        
+                        //console.log( contactData );
+                        console.log( siteData[0].name );
+                        
 
                         //process all the valid rows....
                         
@@ -120,6 +126,15 @@ router.post('/', upload.single('csvfile'), function (req, res) {
                                 //If this is a Reservation or a Check-In....??
                                 //Upfrontpayment amount = [55]
                                 //MoveInDate = 
+
+
+                                //Getting some weird and annoying bug with whitespace and tab chars messing up the data. Seemed to be from a CSV file in MAC numbers format and converted to CSV?
+                                for(let i=0; i < current_csv_row.length; i++){
+                                    let s = current_csv_row[i].trim().replace(/\t/g, '');
+                                    current_csv_row[i] = s;
+                                    //console.log(`${i} : ${s}`);
+                                }
+
 
                                 //TODO: Perhaps use column 0 to do this now - as it has a field to say explicity what the  row represents
                                 if(current_csv_row[55] == ""){
@@ -171,6 +186,9 @@ router.post('/', upload.single('csvfile'), function (req, res) {
  */
 function NewReservation( new_reservation, callback ){
     // construct the data to send to the WFunction
+
+    
+
     let reservation_obj = {
         isite: _SITE, //no site so we make an assumption here it is the main location
         isurname: new_reservation[19],
@@ -219,6 +237,8 @@ function NewCheckIn( new_check_in, callback ){
         (_data_in,async_callback)=>{
             //(1a) upload image 1
             if(new_check_in[40]!=''){
+                console.log(`Image URL: ${new_check_in[40]}`);
+
                 mm.encodeBase64_URI(new_check_in[40], (err, result)=>{
                     if(err){
                         console.log("Err: encodeBase64");
@@ -241,7 +261,11 @@ function NewCheckIn( new_check_in, callback ){
                                 _data_in["err"] = "oled404" ;
                                 async_callback(null, _data_in);
                             }else{
-                                _data_in["photoid"] = JSON.stringify(response);
+                                // _data_in["photoid"] = JSON.stringify(response);
+                                console.log(`photoid ${response}`);
+                                _data_in["photoid"] = JSON.stringify("SUCCESS");
+                                
+                                
                                 async_callback(null, _data_in);
                                 // async_callback(_data_in);
                             }
@@ -250,7 +274,7 @@ function NewCheckIn( new_check_in, callback ){
                 });
             }else{
                 _data_in["photoid"] = "none supplied";
-                async_callback(_data_in);
+                async_callback(null, _data_in);
             }
         },
 
@@ -289,11 +313,15 @@ function NewCheckIn( new_check_in, callback ){
                 iComment:[new_check_in[0], new_check_in[1], new_check_in[2], new_check_in[4], new_check_in[5], new_check_in[53], new_check_in[56], new_check_in[57]].join(', '),
 
             }
-            mm.MakeReservation(reservation_obj, (err, reservation_obj)=>{
+            console.log("ResObj:");
+            console.log(reservation_obj);
+
+            mm.MakeReservation(reservation_obj, (err, res_response)=>{
+                console.log("ResResponse:");
                 console.log(err);
-                console.log(JSON.stringify( reservation_obj ));
+                console.log(JSON.stringify( res_response ));
                 
-                res_obj = reservation_obj[0];//always a single element array from the middelware driver
+                res_obj = res_response[0];//always a single element array from the middelware driver
                 if(err){
                     console.log("Err: MakeRes")
                     async_callback(err);
@@ -302,7 +330,7 @@ function NewCheckIn( new_check_in, callback ){
                         _data_in["reservation"] = res_obj;
                         async_callback(null, _data_in);
                     }else{
-                        async_callback(reservation_obj);
+                        async_callback(res_response);
                     }
                 }
             });
