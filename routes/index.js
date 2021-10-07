@@ -18,13 +18,13 @@ const upload = multer({ dest: 'uploadedcsv/' });
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-	res.send('CSV Portal');
-	// res.render('index', {
-	// 	page_title: "middlemanager CSV",
-	// 	page_description: "Demo of using the middlemanager API to interact with the SpaceManager database",
-	// 	page_path: req.path,
-	// 	page_type: "website",
-	// });
+	// res.send('CSV Portal');
+	res.render('index', {
+		page_title: "middlemanager CSV",
+		page_description: "Demo of using the middlemanager API to interact with the SpaceManager database",
+		page_path: req.path,
+		page_type: "website",
+	});
 });
 
 /* Test the ability of the code to process an image into a base64 string. */

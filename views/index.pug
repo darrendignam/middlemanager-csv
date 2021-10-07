@@ -2,8 +2,16 @@ extends layout
 
 block content
 
+    .container
+        // Main component for a primary marketing message or call to action
+        .jumbotron
+            h1 CSV Upload Tool
+            p This tool requires the CSV be formatted correctly. Please refer to the sample CSV file for the format and column order.
+            p The is an open source tool. Please see the source code to understand how it works, and use it as a starting point to develop your own MiddleManager app.
+            //- p To see the difference between static and fixed top navbars, just scroll.
+            p
+            a.btn.btn-lg.btn-primary(href='/uploadcsv' role='button') Upload CSV &raquo;
 
-    p CSV Portal
 
 
 block footer
