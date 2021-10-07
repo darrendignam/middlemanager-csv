@@ -46,9 +46,10 @@ router.get('/test-id-lookup', function(req, res, next) {
 		}else{
 			let site_data = data;
 
-			let _id = idLookup.returnSiteId("Twenty4 Container Hire", site_data)
+			let _id = idLookup.returnSiteId("Twenty4 Container Hire", site_data);
+			let _scid = idLookup.returnSizeCode("LC0150", site_data);
 
-			res.json({"data":data, " id":_id});
+			res.json({"data":data, "site-id":_id, "size-id":_scid});
 		}
 	});
 });

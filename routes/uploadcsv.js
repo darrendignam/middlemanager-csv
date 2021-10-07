@@ -16,10 +16,11 @@ const fs = require('fs');
 const multer = require('multer');
 const csv = require('fast-csv');
 const { strict } = require('assert');
+
 const upload = multer({ dest: 'uploadedcsv/' });
 
 //TODO - this site is hardcoded in - but needs to come from the CSV or settings
-const _SITE = "RI1GRWXX250320060000";
+// const _SITE = "RI1GRWXX250320060000";
 
 // const _EMAIL     = process.env.CONTACT_ID_EMAIL;
 // const _MOBILE    = process.env.CONTACT_ID_MOBILE;
@@ -51,11 +52,12 @@ router.post('/', upload.single('csvfile'), function (req, res) {
     const validRows = [];
     const responseRows = [];
 
-    let contactData = [];
-    let siteData = [];
+    //used to prevent repeated API calls to get the fairly static data from the database
+    let g_contactData = [];
+    let g_siteData = [];
 
     if (req.file && req.file.path) {
-        //                                                  This might be an option: csv.parseFile(req.file.path, {headers: true}) with the 'headers' option enabled, we get named objects - but the lates CSV file is full of tabs, so the code breaks...
+        // This might be an option: csv.parseFile(req.file.path, {headers: true}) with the 'headers' option enabled, we get named objects - but the lates CSV file is full of tabs, so the code breaks...
         csv.parseFile(req.file.path)
             .on("data", (data) => {
                 //console.log(data);
@@ -99,11 +101,13 @@ router.post('/', upload.single('csvfile'), function (req, res) {
                         res.json(err);
                     } else {
                         //save the data
-                        contactData = spacemanagerIDs[0];
-                        siteData = spacemanagerIDs[1];
+                        g_contactData = spacemanagerIDs[0];
+                        g_siteData = spacemanagerIDs[1];
                         
-                        //console.log( contactData );
-                        console.log( siteData[0].name );
+                        console.log( g_contactData );
+                        console.log( "Contact.Email: " + mmLookup.returnContactId('Email', g_contactData) );
+                        
+                        console.log( g_siteData[0].name );
                         
 
                         //process all the valid rows....
@@ -138,7 +142,7 @@ router.post('/', upload.single('csvfile'), function (req, res) {
 
                                 //TODO: Perhaps use column 0 to do this now - as it has a field to say explicity what the  row represents
                                 if(current_csv_row[55] == ""){
-                                    NewReservation( current_csv_row, (err, result)=>{
+                                    NewReservation( current_csv_row, g_siteData, g_contactData, (err, result)=>{
                                         if (err) {
                                             nextCallback(err);
                                         } else {
@@ -154,7 +158,7 @@ router.post('/', upload.single('csvfile'), function (req, res) {
                                         }
                                     });
                                 }else{
-                                    NewCheckIn( current_csv_row, (err, result)=>{
+                                    NewCheckIn( current_csv_row, g_siteData, g_contactData, (err, result)=>{
                                         if (err) {
                                             nextCallback(err);
                                         } else {
@@ -168,8 +172,45 @@ router.post('/', upload.single('csvfile'), function (req, res) {
                             if (err) {
                                 res.json(err);
                             } else {
+                                let result_table = [];
+
+                                //build a results table
+                                for(let i=0;i<finalResult.length;i++){
+                                    // result_table.push( JSON.stringify(finalResult[i]) );
+                                    let _row = {
+                                        "customer-id": finalResult[i].customer.custid,
+                                        "photoid": finalResult[i].photoid,
+                                        "unit-UnitID": finalResult[i].unit.UnitID,
+                                        "unit-UnitNumber": finalResult[i].unit.UnitNumber,
+                                        "unit-SizeCodeID": finalResult[i].unit.SizeCodeID,
+                                        "unit-Sizecode": finalResult[i].unit.Sizecode,
+                                        "unit-Description": finalResult[i].unit.Description,
+                                        "unit-Weekrate": finalResult[i].unit.Weekrate,
+                                        "unit-MonthRate": finalResult[i].unit.MonthRate,
+                                        "unit-PhysicalSize": finalResult[i].unit.PhysicalSize,
+                                        "unit-Height": finalResult[i].unit.Height,
+                                        "unit-Width": finalResult[i].unit.Width,
+                                        "unit-Depth": finalResult[i].unit.Depth,
+                                        "unit-ledgeritemid": finalResult[i].unit.ledgeritemid,
+                                        "unit-VatCode": finalResult[i].unit.VatCode,
+                                        "unit-VATRate": finalResult[i].unit.VATRate,
+
+                                        "reservation-CustomerID": finalResult[i].reservation.CustomerID,
+                                        "reservation-ReservationID": finalResult[i].reservation.ReservationID,
+                                        "reservation-InvoiceID": finalResult[i].reservation.InvoiceID,
+                                        "reservation-PaymentID": finalResult[i].reservation.PaymentID,
+
+                                        "contract":finalResult[i].contract,
+                                        "orderid":finalResult[i].orderid,
+                                    }
+
+                                    result_table.push(_row);
+                                }
+
+                                //console.log(finalResult.length);
+
                                 //res.json(finalResult);
-                                res.render('data/data_table', {data:finalResult}); //need top pretty print this stuff in the pug...??
+                                res.render('data/data_table', {data:result_table}); //need top pretty print this stuff in the pug...??
                             }
                         });
                     }
@@ -184,13 +225,15 @@ router.post('/', upload.single('csvfile'), function (req, res) {
  * @param {Array} new_reservation - Array of Customer info taken from a Row in the CSV file
  * @param {callback} callback_function - error and response
  */
-function NewReservation( new_reservation, callback ){
+function NewReservation( new_reservation, _siteData, _contactData, callback ){
     // construct the data to send to the WFunction
 
-    
+    let _site = mmLookup.returnSiteId(new_reservation[7], _siteData);
+    let _size = mmLookup.returnSizeCode(new_reservation[6], _siteData);
+    console.log(`LookupIDs: ${_site} : ${_size}`);
 
     let reservation_obj = {
-        isite: _SITE, //no site so we make an assumption here it is the main location
+        isite: _site, 
         isurname: new_reservation[19],
         iforenames: new_reservation[18],
         ititle: new_reservation[17],
@@ -207,7 +250,7 @@ function NewReservation( new_reservation, callback ){
         Postcode: new_reservation[36],
         // inumber:    req.body.phonenumber.replace('+','%2B'), //TODO: Use the new methods to add this number to the CUSTOMER later on.
         imovein: _widgets.formatMonthTodayYYYYMMDD(), //new_reservation[33] // need to convert this date to the correct format //TODO: Correct this to one month from now
-        isizecode: _unitSizecode(new_reservation[4]).SizeCodeID,//TODO: Use the new methods to get this ID form the sizecode, not from the description
+        isizecode: _size,
         idepositamt: new_reservation[3],
         ivatamt: 1, //meh, 1 dont know what to do here! 20% of a fiver is 1 right?
         // ipaymethod: req.body.ipaymethod,
@@ -217,14 +260,19 @@ function NewReservation( new_reservation, callback ){
     mm.addCustomerWithReservation(reservation_obj, callback); //don't do anthing with the {err, result} returned by the mm function, let the calling process above handle it.
 }
 
-function NewCheckIn( new_check_in, callback ){
+function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
     // console.log( new_check_in[0] );
     // callback(null, new_check_in[0]);
+
+    let _site = mmLookup.returnSiteId(new_check_in[7], _siteData);
+    let _size = mmLookup.returnSizeCode(new_check_in[6], _siteData);
+
+    console.log(`LookupIDs: ${_site} : ${_size}`);
 
     async([
         (async_callback)=>{
             //(1) Create New Customer. Could also search for existing here.....
-            CreateCustomer(new_check_in,(err,_customer)=>{
+            CreateCustomer(new_check_in, _siteData, _contactData, (err,_customer)=>{
                 if(err){
                     console.log("Err: CreateCustomer");
                     async_callback(err);
@@ -277,7 +325,7 @@ function NewCheckIn( new_check_in, callback ){
 
         (_data_in,async_callback)=>{
             //(2) Get UnitID. Making a reservation will assign us a UnitID
-            mm.getAvaliableUnit(_SITE, _unitSizecode(new_check_in[4]).SizeCodeID, (err,unit)=>{ //TODO: Use the new Utility Here to get the ID for the sizecode
+            mm.getAvaliableUnit(_site, _unitSizecode(new_check_in[4]).SizeCodeID, (err,unit)=>{ //TODO: Use the new Utility Here to get the ID for the sizecode
                 if(err){
                     console.log("Err: getAvaliableUnit");
                     async_callback(err);
@@ -296,9 +344,10 @@ function NewCheckIn( new_check_in, callback ){
 
         (_data_in,async_callback)=>{          
             //(3) Make reservation from Customer and Unit
+
             let reservation_obj = {
                 iCustomerID: _data_in.customer.custid,
-                iSite: _SITE,
+                iSite: _site,
                 iReservedOn: _widgets.formatTodayYYYYMMDD(),//Date the user made the reservation in the front end. Not in the CSV so I will use today's date!
                 iMoveIn: _widgets.formatDateYYYYMMDD(new_check_in[16]),
                 iUnit: _data_in.unit.UnitID,//can ignore this and let SM make the assignment
@@ -336,7 +385,7 @@ function NewCheckIn( new_check_in, callback ){
         (_data_in,async_callback)=>{
             //(4) try and push this to a new order
 
-            CreateCheckIn(new_check_in, _data_in, (err, _contract)=>{
+            CreateCheckIn(new_check_in, _data_in, _site, (err, _contract)=>{
                 if(err){
                     console.log("Err: CreateCheckIn");
                     async_callback(err);
@@ -352,36 +401,47 @@ function NewCheckIn( new_check_in, callback ){
             console.log("Err: New Checkin: "+ JSON.stringify(err));
             callback(err);
         }else{
-            //console.log(final_result);
+            console.log(final_result);
+
+            //failed: 'Invalid: SQLState: 00000SQLCode: 0'
 
             // OK, so an example of a successful response from the SpaceManager backend is not actually JSON. It's:
             // "SQLState: 00000SQLCode: 0ContractID: RI214L1453100"
             // excluding the double-quotes...... Perhaps the middleware could do this step, but for now, we do it here....
             // regex to the rescue
 
-            let result_regex = /(SQLState: 00000SQLCode: 0ContractID:)\s([A-Z0-9]{1,20})/g;
-            let orderid = result_regex.exec(final_result.contract)[2];
 
-            if(orderid!=''){
-                final_result["orderid"] = orderid;
-                callback(null, final_result);
-      
+            if(final_result.contract == 'Invalid: SQLState: 00000SQLCode: 0'){
+                callback({"error" : "SpaceManager failed to create contract", "message" : final_result});
             }else{
-                callback({"error" : "SpaceManager returned an empty ID", "message" : final_result});
+                let result_regex = /(SQLState: 00000SQLCode: 0ContractID:)\s([A-Z0-9]{1,20})/g;
+                let orderid = result_regex.exec(final_result.contract)[2];
+    
+                if(orderid!=''){
+                    final_result["orderid"] = orderid;
+                    callback(null, final_result);
+          
+                }else{
+                    callback({"error" : "SpaceManager returned an empty ID", "message" : final_result});
+                }
             }
+
         }
     });
 
 }
 
-function CreateCustomer(_data_in, callback){
+function CreateCustomer(_data_in, _siteData, _contactData, callback){
+    let _site = mmLookup.returnSiteId(_data_in[7], _siteData);
+    console.log(`LookupIDs: ${_site}`);
+
     async([
         //step 1 create customer
         function(callback) {
             //create new spaceman user
             mm.addCustomer({
                 "idoreturn": 1, //return CustomerID (true / false)
-                "isite": _SITE,//TODO: Use our new functions to get this value
+                "isite": _site,//TODO: Use our new functions to get this value
                 "isurname": _data_in[19],
                 "iforenames": _data_in[18],
                 "ititle": _data_in[17],
@@ -407,10 +467,29 @@ function CreateCustomer(_data_in, callback){
                 {
                     "icustomerid": _customer[0].custid, 
                     /*"iphoneid":"null",*/ 
-                    "itypeid":"RI16CXRI08022018007O", 
+                    // "itypeid":"RI16CXRI08022018007O", 
+                    "itypeid" : mmLookup.returnContactId('Mobile', _contactData),
                     "inumber": _data_in[12],
                 },(err, _newContact)=>{
                     console.log("[][][][][][] NEW MOBILE [][][][][]");
+                    console.log(err);
+                    console.log(_newContact);
+                    //console.log( _customer[0].custid );
+
+                    callback(null, _customer);
+                }
+            );
+        },
+        //add Email
+        function(_customer, callback){
+            //if the above is correct - do a phonme number import:
+            mm.post_request("/api/v1/base/WManageContact",
+                {
+                    "icustomerid": _customer[0].custid, 
+                    "itypeid" : mmLookup.returnContactId('Email', _contactData),
+                    "inumber": _data_in[11],
+                },(err, _newContact)=>{
+                    console.log("[][][][][][] NEW EMAIL [][][][][]");
                     console.log(err);
                     console.log(_newContact);
                     //console.log( _customer[0].custid );
@@ -426,10 +505,12 @@ function CreateCustomer(_data_in, callback){
     });
 }
 
-function CreateCheckIn(_new_check_in, _data_in, callback){
+function CreateCheckIn(_new_check_in, _data_in, _siteID, callback){
+    console.log(`LookupIDs: ${_siteID}`);
+
     let order_details = {
         customerid:         _data_in.customer.custid, //This terrible naming of the custid is what the WFunction returns
-        siteid:             _SITE,
+        siteid:             _siteID,
         unitid:             _data_in.unit.UnitID,
         ireservationid:     _data_in.reservation.ReservationID,
         startdate:          _widgets.formatDateYYYYMMDD(_new_check_in[16]),

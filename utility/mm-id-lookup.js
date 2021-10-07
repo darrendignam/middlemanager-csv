@@ -48,11 +48,29 @@ module.exports = {
         return _result;
     },
 
+    returnSizeCode: (_size_name, _site_data)=>{
+        let _result = "ERROR";
+
+        for(let i = 0; i < _site_data.length; i++){
+            for(let j = 0; j < _site_data[i].units.length; j++){
+                if( _site_data[i].units[j].Sizecode == _size_name ){
+                    _result = _site_data[i].units[j].SizeCodeID;
+                    break;
+                }
+            }
+        }
+
+        return _result;
+    },
+
     returnContactId: (_description, _arr) => {
-        let output = "";
-        for(let i; i<arr.length; i++){
-            if(arr[i].description && arr[i].phonetypeid && arr[i].description == _description){
-                output = arr[i].phonetypeid;
+        let output = "NONE";
+        //console.log("DES: "+_description)
+        for(let i=0; i<_arr.length; i++){
+            //console.log("iDES: "+_arr[i].description)
+            if(_arr[i].description == _description){
+                //console.log(`A: ${_arr[i].description} B: ${_arr[i].description}`)
+                output = _arr[i].phonetypeid;
                 break;
             }
         }
