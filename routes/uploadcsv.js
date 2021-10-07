@@ -178,6 +178,8 @@ router.post('/', upload.single('csvfile'), function (req, res) {
                                 for(let i=0;i<finalResult.length;i++){
                                     // result_table.push( JSON.stringify(finalResult[i]) );
                                     let _row = {
+                                        "customer-name": finalResult[i].name,
+                                        "customer-email": finalResult[i].email,
                                         "customer-id": finalResult[i].customer.custid,
                                         "photoid": finalResult[i].photoid,
                                         "unit-UnitID": finalResult[i].unit.UnitID,
@@ -266,6 +268,8 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
 
     let _site = mmLookup.returnSiteId(new_check_in[7], _siteData);
     let _size = mmLookup.returnSizeCode(new_check_in[6], _siteData);
+    let _customer_name = `${new_check_in[9]} ${new_check_in[10]}`;
+    let _customer_email = new_check_in[11];
 
     console.log(`LookupIDs: ${_site} : ${_size}`);
 
@@ -419,6 +423,9 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
     
                 if(orderid!=''){
                     final_result["orderid"] = orderid;
+                    final_result["name"] = _customer_name;
+                    final_result["email"] = _customer_email;
+
                     callback(null, final_result);
           
                 }else{
