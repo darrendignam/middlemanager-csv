@@ -463,7 +463,7 @@ function CreateCustomer(_data_in, _siteData, _contactData, callback){
                 "Town": _data_in[35],
                 "Postcode": _data_in[36],
                 // "idob": null,
-                "inotes": [_data_in[42], _data_in[0], _data_in[1], _data_in[2], _data_in[4], _data_in[5], _data_in[6], _data_in[53], _data_in[56], _data_in[57]].join(', ') ,
+                "inotes": [ _data_in[0], _data_in[1], _data_in[2], _data_in[4], _data_in[5], _data_in[6], _data_in[53], _data_in[56], _data_in[57]].join(', ') ,
                 "iemailaddress": _data_in[11],
             }, callback );
         },
@@ -504,7 +504,46 @@ function CreateCustomer(_data_in, _siteData, _contactData, callback){
                     callback(null, _customer);
                 }
             );
-        }
+        },
+        //add authorised persons
+        function(_customer, callback){
+            //if the fiels is not empty:
+
+            if(_data_in[42] != ''){ //Authorised Persons field
+                let AuthPerson = JSON.parse(_data_in[42]);
+                //[{"title":"Miss","firstName":"Alex","surname":"Smith","emailAddress":"alexsmith@gmail.com","addressLineOne":"10 Roseville Road","addressLineTwo":"","addressLineThree":"","city":"Leeds","postCode":"LS12 4HP","carRegistration":"","mobile":"01134269111","notified":"1","isPrimaryContact":"1","isAuthorisedForAccess":"1","isAuthorisedForAccount":"1"}]
+                mm.post_request("/api/v1/base/WAddPerson",
+                    {
+                        "icustomerid": _customer[0].custid, 
+                        "isurname": AuthPerson.surname,                    // *isurname               char(50)
+                        "iforenames": AuthPerson.firstname,                    // iforenames              char(50)
+                        "ititle": AuthPerson.title,                    // ititle                  char(50)
+                        "Add1": AuthPerson.addressLineOne,                    // Add1                    char(50)
+                        "Add2": AuthPerson.addressLineTwo,                    // Add2                    char(50)
+                        "Add3": AuthPerson.addressLineThree,                    // Add3                    char(50)
+                        "iTown": AuthPerson.city,                    // iTown                   char(50)
+                        "iCounty":"",                    // iCounty                 char(50)
+                        "iPostcode":AuthPerson.postCode,                    // iPostcode               char(20)
+                        "iCountry":"",                    // iCountry                char(3)
+                        "iJobTitle":"",                    // iJobTitle               char(50)
+                        "iPrimaryContact":AuthPerson.isPrimaryContact,                    // iPrimaryContact         integer
+                        "iAuthorised":AuthPerson.isAuthorisedForAccess,                    // iAuthorised             integer
+                        "iAuthorisedForAccount":AuthPerson.isAuthorisedForAccount,                    // iAuthorisedForAccount   integer
+                        "idoreturn":1,                    // idoreturn               integer
+                    },(err, _newPerson)=>{
+                        console.log("[][][][][][] ADD PERSON [][][][][]");
+                        console.log(err);
+                        console.log(_newPerson);
+                        //console.log( _customer[0].custid );
+
+                        callback(null, _customer);
+                    }
+                );
+            }else{
+                callback(null, _customer);
+            }
+        },
+
     ], function(err, data){
 
         //for now send back the old style customer array, but will refactor this to be the new object of customer and contacts.
@@ -531,8 +570,8 @@ function CreateCheckIn(_new_check_in, _data_in, _siteID, callback){
         paymentid:          'C6',
         paymentref:         'WorldPay',
         goodsvalue:         _new_check_in[43],
-        salesitems:         _new_check_in[54],
-        notes:              [_new_check_in[42], _new_check_in[0], _new_check_in[1], _new_check_in[4],_new_check_in[5],_new_check_in[6], _new_check_in[53], _new_check_in[56], _new_check_in[57], _new_check_in[37] ].join(', ') ,
+        salesitems:         _new_check_in[54], //The test items in the CSV had whitespace around the SKU - probably an issue in the data coming from the CSV export tool
+        notes:              '', // TO BIG NO POINT //[_new_check_in[42], _new_check_in[0], _new_check_in[1], _new_check_in[4],_new_check_in[5],_new_check_in[6], _new_check_in[53], _new_check_in[56], _new_check_in[57], _new_check_in[37] ].join(', ') ,
 
     };
     //console.log(order_details);
