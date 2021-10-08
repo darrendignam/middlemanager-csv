@@ -463,7 +463,7 @@ function CreateCustomer(_data_in, _siteData, _contactData, callback){
                 "Town": _data_in[35],
                 "Postcode": _data_in[36],
                 // "idob": null,
-                "inotes": [ _data_in[0], _data_in[1], _data_in[2], _data_in[4], _data_in[5], _data_in[6], _data_in[53], _data_in[56], _data_in[57]].join(', ') ,
+                "inotes": [ _data_in[0], _data_in[1], _data_in[2], _data_in[4], _data_in[5], _data_in[6], _data_in[53], _data_in[56], _data_in[57], _data_in[42], _data_in[54] ].join(', ') ,
                 "iemailaddress": _data_in[11],
             }, callback );
         },
