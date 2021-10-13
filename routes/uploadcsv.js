@@ -25,28 +25,6 @@ const upload = multer({ dest: 'uploadedcsv/' });
 var request = require('request');
 
 
-//TODO - this site is hardcoded in - but needs to come from the CSV or settings
-// const _SITE = "RI1GRWXX250320060000";
-
-// const _EMAIL     = process.env.CONTACT_ID_EMAIL;
-// const _MOBILE    = process.env.CONTACT_ID_MOBILE;
-// const _TELEPHONE = process.env.CONTACT_ID_TELEPHONE;
-
-    //   http://192.168.1.165:3000/api/v1/base/WGetContactType
-    // {
-    //   "phonetypeid": "RI16CTRI08022018007N",
-    //   "description": "Email"
-    // },
-    // {
-    //   "phonetypeid": "RI16CXRI08022018007O",
-    //   "description": "Mobile"
-    // },
-    // {
-    //   "phonetypeid": "RI16D1RI08022018007P",
-    //   "description": "Telephone"
-    // },
-
-
 router.get('/', function (req, res) {
     res.render("data/uploadcsv");
 });
