@@ -131,12 +131,12 @@ router.post('/', upload.single('csvfile'), function (req, res) {
                                             nextCallback(err);
                                         } else {
                                             //result is: //[{"CustomerID":"RI2168H253100007H000","ReservationID":"RI2168H253100007H002","InvoiceID":"SM000QOF","PaymentID":"SM000QOG"}]
-                                            let tmp_result = result[0];          //this returns an array of length 1. So to make the full results array 'nicer' I de reference the first item out of it.
+                                            //let tmp_result = result[0];          //this returns an array of length 1. So to make the full results array 'nicer' I de reference the first item out of it.
                                             //TODO: add some additional fields make tabulation easier....??
 
                                             // TODO: add in the feature to add the phone and email as IContactTypes
 
-                                            resultsArray.push(tmp_result);     
+                                            resultsArray.push(result);     
                                             nextCallback(null, resultsArray);
                                             
                                         }
@@ -156,12 +156,16 @@ router.post('/', upload.single('csvfile'), function (req, res) {
                             if (err) {
                                 res.json(err);
                             } else {
+
+                                // console.log(finalResult);
+
                                 let result_table = [];
 
                                 //build a results table
                                 for(let i=0;i<finalResult.length;i++){
                                     // result_table.push( JSON.stringify(finalResult[i]) );
                                     let _row = {
+                                        "booking-id": finalResult[i].bookingid,
                                         "customer-name": finalResult[i].name,
                                         "customer-email": finalResult[i].email,
                                         "customer-id": finalResult[i].customer.custid,
@@ -215,6 +219,9 @@ router.post('/', upload.single('csvfile'), function (req, res) {
  */
 function NewReservation( new_reservation, _siteData, _contactData, callback ){
     // construct the data to send to the WFunction
+    let _bookingid = new_reservation[1];
+    let _customer_name = `${new_reservation[9]} ${new_reservation[10]}`;
+    let _customer_email = new_reservation[11];
 
     let _site = mmLookup.returnSiteId(new_reservation[7], _siteData);
     let _size = mmLookup.returnSizeCode(new_reservation[6], _siteData);
@@ -245,8 +252,30 @@ function NewReservation( new_reservation, _siteData, _contactData, callback ){
         ipayref: 'creditcard',
         icomment: [new_reservation[0], new_reservation[1], new_reservation[2], new_reservation[4], new_reservation[5], new_reservation[53], new_reservation[56], new_reservation[57]].join(', '),
     }
-    mm.addCustomerWithReservation(reservation_obj, callback); //don't do anthing with the {err, result} returned by the mm function, let the calling process above handle it.
+    mm.addCustomerWithReservation(reservation_obj, (err, reservation)=>{
+        if(err){
+            callback(err);
+        }else{
+            //result is: //[{"CustomerID":"RI2168H253100007H000","ReservationID":"RI2168H253100007H002","InvoiceID":"SM000QOF","PaymentID":"SM000QOG"}]
+            // console.log(reservation);
+            let final_result = {};
+
+            final_result["bookingid"] = _bookingid;
+            final_result["name"] = _customer_name;
+            final_result["email"] = _customer_email;
+            final_result["reservation"] = reservation[0];
+            final_result["customer"] = { custid:reservation[0].CustomerID };
+            final_result["unit"]     = {UnitID:'',UnitNumber:'',UnitNumber:'',SizeCodeID:'',Sizecode:'',Description:`InvoiceID: ${reservation[0].InvoiceID} PaymentID: ${reservation[0].PaymentID}`,Weekrate:'',MonthRate:'',PhysicalSize:'',Height:'',Width:'',Depth:'',ledgeritemid:'',VatCode:'', VATRate:'', };
+
+            final_result["photoid"] = '';
+            final_result["contract"] = '';
+            final_result["orderid"] = '';
+
+            callback(null, final_result);
+        }
+    });
 }
+
 
 /**
  * This function processes a new 'check in' row from the CSV File. This function makes many further API calls and calls the other helper functions below in the file.
@@ -262,6 +291,7 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
 
     let _site = mmLookup.returnSiteId(new_check_in[7], _siteData);
     let _size = mmLookup.returnSizeCode(new_check_in[6], _siteData);
+    let _bookingid = new_reservation[1];
     let _customer_name = `${new_check_in[9]} ${new_check_in[10]}`;
     let _customer_email = new_check_in[11];
 
@@ -429,6 +459,7 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
                 let orderid = result_regex.exec(final_result.contract)[2];
     
                 if(orderid!=''){
+                    final_result["bookingid"] = _bookingid;
                     final_result["orderid"] = orderid;
                     final_result["name"] = _customer_name;
                     final_result["email"] = _customer_email;
