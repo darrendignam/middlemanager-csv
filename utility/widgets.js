@@ -77,4 +77,22 @@ module.exports = {
             return [year, month, day].join('');
         },
 
+    /**
+     * Using the current date.now + one month!
+     * This helper function will convert the date format to the style used by the Smart Debit System.
+     */
+     smartDebit_formatMonthTodayYYYYMMDD: () => {
+        var d = new Date(),
+            month = '' + (d.getMonth() + 2),
+            day = '' + d.getDate(),
+            year = d.getFullYear();
+
+        if (month.length < 2)
+            month = '0' + month;
+        if (day.length < 2)
+            day = '0' + day;
+
+        return [year, month, day].join('-');
+    },
+
 };

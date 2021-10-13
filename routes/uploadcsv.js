@@ -16,8 +16,14 @@ const fs = require('fs');
 const multer = require('multer');
 const csv = require('fast-csv');
 const { strict } = require('assert');
+const widgets = require('../utility/widgets');
 
 const upload = multer({ dest: 'uploadedcsv/' });
+
+//for smart debit......
+// var needle = require("needle");
+var request = require('request');
+
 
 //TODO - this site is hardcoded in - but needs to come from the CSV or settings
 // const _SITE = "RI1GRWXX250320060000";
@@ -399,6 +405,12 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
                 }
             });
         },
+        (_data_in, async_callback)=>{
+            ProcessSmartDebit( new_check_in, (err, _smart_debit)=>{
+                async_callback(null, _data_in);
+            });
+        },
+        
     ],(err,final_result)=>{
         if(err){
             //if you see something like// [{"'1'":"1"}]  //then it was the reservation that errored
@@ -577,4 +589,197 @@ function CreateCheckIn(_new_check_in, _data_in, _siteID, callback){
     //console.log(order_details);
     mm.CSV_CheckIn(order_details, callback);
 }
+
+function ProcessSmartDebit(_data_in, callback){
+    let server_url = 'https://sandbox.ddprocessing.co.uk';
+    let api_validate = '/api/ddi/variable/validate';
+    let api_create = '/api/ddi/variable/create';
+
+    let _pslid = ''; //get from the Smart Debit account details
+    let _sd_username = '';
+    let _sd_password = '!';
+
+    // var needle_options = {
+    //     // username: '', //get from the Smart Debit account details
+    //     // password: '', //get from the Smart Debit account details
+    //     // compressed: true,
+    //     // accept: 'application/json', //not sure this will do anything with smart debit
+    //     content_type: 'application/x-www-form-urlencoded',
+    //     open_timeout: 5000, //max 5 second timeout
+    // };
+
+    //TODO: In the live system use the actual values. Also check for XX in the values, which means that this is a copy of the CSV file.....
+    // let _SC = _data_in[49];
+    // let _AN = _data_in[50];
+    // let _L4D = _AN.substring(4,8);
+
+    // Smart Debit Sandbox Version!!
+    let _SC = '000000';
+    let _AN = '12345678';
+    let _L4D = Math.floor(Math.random()*(9999-1000+1)+1000);
+
+    //this is the first three letters of the first and last names and the last four digits of the account number!
+    let ddi_ref = `${_data_in[18].substring(0,3).toUpperCase()}${_data_in[19].substring(0,3).toUpperCase()}${_L4D}`
+
+    let payload={
+        'variable_ddi[sort_code]': _SC,
+        'variable_ddi[account_number]': _AN,
+        'variable_ddi[reference_number]': ddi_ref,
+        'variable_ddi[first_name]': _data_in[18],
+        'variable_ddi[last_name]': _data_in[19],     //#csv_in['Billing First Name'][i]
+        'variable_ddi[address_1]': _data_in[22].replace(/,/g, '.'),  // <error>Address 1 only letters, numbers, spaces, hyphens, forward slash, ampersand and full stops are permitted in address 1</error> // no commas!
+        'variable_ddi[town]': _data_in[25],
+        'variable_ddi[postcode]': _data_in[26],
+        'variable_ddi[country]': 'UK',  //TODO: There is no CSV data with the country!?
+        'variable_ddi[account_name]': _data_in[48].substring(0,18), // <error>Account name is too long (maximum is 18 characters)</error> //API errors!
+        'variable_ddi[service_user][pslid]': _pslid,
+        'variable_ddi[frequency_type]': 'M',
+        'variable_ddi[default_amount]': '0',
+        //#'Variable_ddi[first_amount]': '50',
+        'variable_ddi[payer_reference]': ddi_ref,
+        //TODO: choose a better time here
+        'variable_ddi[start_date]': widgets.smartDebit_formatMonthTodayYYYYMMDD() ,
+        //#'variable_ddi[end_date]': '{{validate_adhoc_end_date}}',
+        //#'variable_ddi[title]': '{{validate_adhoc_title}}',
+        //#'variable_ddi[address_2]': '{{validate_adhoc_address2}}',
+        //#'variable_ddi[address_3]': '{{validate_adhoc_address3}}',
+        //#'variable_ddi[county]': '{{validate_adhoc_county}}',
+        'variable_ddi[email_address]': _data_in[11],
+        //#'variable_ddi[promotion]': '{{validate_adhoc_promotion}}',
+        //#'variable_ddi[company_name]': '{{validate_adhoc_company_name}}'
+    }
+
+
+    async([
+        //step 1 validate customer DD
+        function(a_callback) {
+            console.log("SD Validate");
+            console.log(payload);
+            // needle.post(`${server_url}${api_validate}`, payload, needle_options, function (err, res) {
+            //     console.log(`${server_url}${api_validate}`);
+            //     console.log("err");
+            //     console.log(err);
+            //     console.log("res");
+            //     console.log(res);
+            //     console.log("res end");
+
+            //     if (err) {
+            //         a_callback(err);
+            //     } else if (res.statusCode != 200) {
+            //         a_callback({
+            //             "error": "Not Found",
+            //             "type": "404",
+            //             "number": 404,
+            //         });
+            //     } else if (res.body.error) {
+            //         a_callback(res.body);
+            //     }
+            //     else {
+            //         a_callback(null, res);
+            //     }
+            // });
+            
+            // var auth = 'Basic ' + Buffer.from(_sd_username + ':' + _sd_password).toString('base64');
+
+            var options = {
+                'method': 'POST',
+                'auth': {
+                    'user': _sd_username,
+                    'pass': _sd_password,
+                    'sendImmediately': true,
+                },
+                'url': `${server_url}${api_validate}`,
+                'headers': {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                //   'Authorization': auth,
+                },
+                formData: payload
+            };
+
+            request(options, function (err, res) {
+                // if (error) throw new Error(error);
+                // console.log(response.body);
+                console.log(`${server_url}${api_validate}`);
+                // console.log("err");
+                // console.log(err);
+                // console.log("res");
+                // console.log(res);
+                // console.log("res end");
+
+                console.log(res.body)
+
+                if (err) {
+                    console.log("Err");
+                    a_callback(err);
+                } else if (res.statusCode != 200) {
+                    a_callback({
+                        "error": "Not Found",
+                        "type": "404",
+                        "number": 404,
+                    });
+                } else if (res.body.error) {
+                    a_callback(res.body);
+                }
+                else {
+                    console.log(res.body);
+                    a_callback(null, res);
+                }                
+            });
+
+
+        },
+       
+        //authorise the DD and create it
+        function(_sm_debit, a_callback){
+            console.log("SD Create");
+
+            var options = {
+                'method': 'POST',
+                'auth': {
+                    'user': _sd_username,
+                    'pass': _sd_password,
+                    'sendImmediately': true,
+                },                
+                'url': `${server_url}${api_create}`,
+                'headers': {
+                  'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                formData: payload
+            };
+
+            request(options, function (err, res) {
+                // if (error) throw new Error(error);
+                // console.log(response.body);
+                console.log(`${server_url}${api_create}`);
+                // console.log("err");
+                // console.log(err);
+                // console.log("res");
+                // console.log(res);
+                // console.log("res end");
+
+                if (err) {
+                    a_callback(err);
+                } else if (res.statusCode != 200) {
+                    a_callback({
+                        "error": "Not Found",
+                        "type": "404",
+                        "number": 404,
+                    });
+                } else if (res.body.error) {
+                    a_callback(res.body);
+                }
+                else {
+                    console.log(res.body);
+                    a_callback(null, res);
+                }                
+            });
+
+        },
+
+    ], function(err, data){
+        callback(err, data);
+    });
+
+}
+
 module.exports = router;
