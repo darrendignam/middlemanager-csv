@@ -11,6 +11,7 @@ var _unitSizecode = require('../utility/unit-sizecode');
 var _widgets = require('../utility/widgets');
 
 const json2csv = require('json2csv').parse;
+var parseXML = require('xml2js').parseString;
 
 const fs = require('fs');
 const multer = require('multer');
@@ -169,7 +170,7 @@ router.post('/', upload.single('csvfile'), function (req, res) {
                                         "customer-name": finalResult[i].name,
                                         "customer-email": finalResult[i].email,
                                         "customer-id": finalResult[i].customer.custid,
-                                        "photoid": finalResult[i].photoid,
+                                        
                                         "unit-UnitID": finalResult[i].unit.UnitID,
                                         "unit-UnitNumber": finalResult[i].unit.UnitNumber,
                                         "unit-SizeCodeID": finalResult[i].unit.SizeCodeID,
@@ -190,6 +191,8 @@ router.post('/', upload.single('csvfile'), function (req, res) {
                                         "reservation-InvoiceID": finalResult[i].reservation.InvoiceID,
                                         "reservation-PaymentID": finalResult[i].reservation.PaymentID,
 
+                                        "photoid": finalResult[i].photoid,
+                                        "bankaccountID" : finalResult[i].bankaccount,
                                         "contract":finalResult[i].contract,
                                         "orderid":finalResult[i].orderid,
                                     }
@@ -268,6 +271,7 @@ function NewReservation( new_reservation, _siteData, _contactData, callback ){
             final_result["unit"]     = {UnitID:'',UnitNumber:'',UnitNumber:'',SizeCodeID:'',Sizecode:'',Description:`InvoiceID: ${reservation[0].InvoiceID} PaymentID: ${reservation[0].PaymentID}`,Weekrate:'',MonthRate:'',PhysicalSize:'',Height:'',Width:'',Depth:'',ledgeritemid:'',VatCode:'', VATRate:'', };
 
             final_result["photoid"] = '';
+            final_result["bankaccountID"] = '',
             final_result["contract"] = '';
             final_result["orderid"] = '';
 
@@ -428,10 +432,16 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
             //TODO: Could check here for XX-XX-XX XXXXXXXX in the CSV and not try and send that data....
             //TODO: Actually do something with the XML that is returned!
             if(new_check_in[51] == 'TRUE'){
-                ProcessSmartDebit( new_check_in, (err, _smart_debit)=>{
+                ProcessSmartDebit( new_check_in, _data_in, (err, _smart_debit)=>{
+                    if( _smart_debit[0] && _smart_debit[0].custpayid ){
+                        _data_in['bankaccount'] = _smart_debit[0].custpayid ;
+                    }else{
+                        _data_in['bankaccount'] = '';
+                    }
                     async_callback(null, _data_in);
                 });
             }else{
+                _data_in['bankaccount'] = '';
                 async_callback(null, _data_in);
             }
 
@@ -639,10 +649,10 @@ function CreateCheckIn(_new_check_in, _data_in, _siteID, callback){
 /**
  * This function will send the customer details to the Smart Debit API to initiate the processes needed for Direct Debit payments for the customer in the future.
  * 
- * @param {Array} _data_in - Array of Customer info taken from a Row in the CSV file
+ * @param {Array} _customer_in - Array of Customer info taken from a Row in the CSV file
  * @param {callback} callback_function - error and response
  */
-function ProcessSmartDebit(_data_in, callback){
+function ProcessSmartDebit(_customer_in, _data_in, callback){
     let server_url = process.env.SMART_DEBIT_URL;
     let api_validate = '/api/ddi/variable/validate';
     let api_create = '/api/ddi/variable/create';
@@ -658,25 +668,25 @@ function ProcessSmartDebit(_data_in, callback){
         _AN = '12345678';
         _L4D = Math.floor(Math.random()*(9999-1000+1)+1000);
     }else{
-        _SC = _data_in[49];
-        _AN = _data_in[50];
+        _SC = _customer_in[49];
+        _AN = _customer_in[50];
         _L4D = _AN.substring(4,8);
     }
 
     //this is the first three letters of the first and last names and the last four digits of the account number!
-    let ddi_ref = `${_data_in[18].substring(0,3).toUpperCase()}${_data_in[19].substring(0,3).toUpperCase()}${_L4D}`
+    let ddi_ref = `${_customer_in[18].substring(0,3).toUpperCase()}${_customer_in[19].substring(0,3).toUpperCase()}${_L4D}`
 
     let payload={
         'variable_ddi[sort_code]': _SC,
         'variable_ddi[account_number]': _AN,
         'variable_ddi[reference_number]': ddi_ref,
-        'variable_ddi[first_name]': _data_in[18],
-        'variable_ddi[last_name]': _data_in[19],     //#csv_in['Billing First Name'][i]
-        'variable_ddi[address_1]': _data_in[22].replace(/,/g, '.'),  // <error>Address 1 only letters, numbers, spaces, hyphens, forward slash, ampersand and full stops are permitted in address 1</error> // no commas!
-        'variable_ddi[town]': _data_in[25],
-        'variable_ddi[postcode]': _data_in[26],
+        'variable_ddi[first_name]': _customer_in[18],
+        'variable_ddi[last_name]': _customer_in[19],     //#csv_in['Billing First Name'][i]
+        'variable_ddi[address_1]': _customer_in[22].replace(/,/g, '.'),  // <error>Address 1 only letters, numbers, spaces, hyphens, forward slash, ampersand and full stops are permitted in address 1</error> // no commas!
+        'variable_ddi[town]': _customer_in[25],
+        'variable_ddi[postcode]': _customer_in[26],
         'variable_ddi[country]': 'UK',  //TODO: There is no CSV data with the country!?
-        'variable_ddi[account_name]': _data_in[48].substring(0,18), // <error>Account name is too long (maximum is 18 characters)</error> //API errors!
+        'variable_ddi[account_name]': _customer_in[48].substring(0,18), // <error>Account name is too long (maximum is 18 characters)</error> //API errors!
         'variable_ddi[service_user][pslid]': _pslid,
         'variable_ddi[frequency_type]': 'M',
         'variable_ddi[default_amount]': '0',
@@ -689,7 +699,7 @@ function ProcessSmartDebit(_data_in, callback){
         //#'variable_ddi[address_2]': '{{validate_adhoc_address2}}',
         //#'variable_ddi[address_3]': '{{validate_adhoc_address3}}',
         //#'variable_ddi[county]': '{{validate_adhoc_county}}',
-        'variable_ddi[email_address]': _data_in[11],
+        'variable_ddi[email_address]': _customer_in[11],
         //#'variable_ddi[promotion]': '{{validate_adhoc_promotion}}',
         //#'variable_ddi[company_name]': '{{validate_adhoc_company_name}}'
     }
@@ -744,13 +754,36 @@ function ProcessSmartDebit(_data_in, callback){
                     });
                 } else if (res.body.error) {
                     a_callback(res.body);
-                }
-                else {
+                } else {//success?
                     console.log(res.body);
-                    a_callback(null, res);
+                    parseXML(res.body, function (err, result) {
+                        if(err){
+                            a_callback(err);
+                        }else{
+                            console.dir(result);
+                            if(result.successful){
+                                //console.dir(result.successful.success[2]);
+                                a_callback(null, result);
+                            }else{
+                                a_callback(result);
+                            }
+                        }
+                    });
                 }                
             });
-
+        // {  //result.successful.success[2] = 
+        //     '$': {
+        //       bank_name: 'HSBBC BANK PLC',
+        //       branch: 'Broadway',
+        //       address1: '32 Bridge St',
+        //       address2: '',
+        //       address3: '',
+        //       address4: '',
+        //       town: 'Evesham',
+        //       county: 'Worcs.',
+        //       postcode: 'WR11 4RU'
+        //     }
+        //   }
 
         },
        
@@ -795,7 +828,48 @@ function ProcessSmartDebit(_data_in, callback){
                 }
                 else {
                     console.log(res.body);
-                    a_callback(null, res);
+                    //If we are here the validate was OK, so now assuming everything works, we can add the bank account
+                    parseXML(res.body, function (err, result) {
+                        if(err){
+                            a_callback(err);
+                        }else{
+                            console.dir(result);
+                            if(result.variable_ddi){
+                                //console.dir(result.successful.success[2]);
+                                // a_callback(null, result);
+                                //ADDBANKACCOUNT if the DD stuff worked!#
+
+                                mm.post_request("/api/v1/base/WAddBankAccount",
+                                {
+                                    "icustomerid": _data_in.customer.custid, 
+                                    "ipaymethodid":"C7", //Hard coded, need a WFunction,. or just to know what these are! C5 Does not work!!
+                                    "iaccountname" : ddi_ref, //making this the DDIREF from the SmartDebit API, but I dont know what these values should be. Consult Elisabeth?
+                                    "iaccountno": _AN,
+                                    "isortno": _SC,
+                                    "ibacsref": ddi_ref,
+                                    "idefault":1,
+                                    "iddreturned":1, //not sure what this is, but seems to need to be 1!! perhaps its the customer permission? or its the the 'mandate printed'?
+                                    "ibankname":_sm_debit.successful.success[2].$.bank_name,
+                                    "ibankaddress":_sm_debit.successful.success[2].$.address1,
+                                    "ibanktown":_sm_debit.successful.success[2].$.town,
+                                    "ibankcounty":_sm_debit.successful.success[2].$.county,
+                                    "ibankpostcode":_sm_debit.successful.success[2].$.postcode,
+
+                                },(err, _newBankAccount)=>{
+                                    console.log("[][][][][][] NEW BANK ACCOUNT [][][][][]");
+                                    console.log(err);
+                                    console.log(_newBankAccount);
+                                    if(err){
+                                        a_callback(err);
+                                    }else{
+                                        a_callback(null, _newBankAccount);
+                                    }
+                                });
+                            }else{
+                                a_callback(result);
+                            }
+                        }
+                    });
                 }                
             });
 
