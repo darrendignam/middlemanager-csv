@@ -9,6 +9,12 @@ NODE_ENV='development'
 ENV_SPACE='middlemanager'
 MIDDLEMANAGER_URL='127.0.0.1:3001'
 MIDDLEMANAGER_KEY='54321'
+
+SMART_DEBIT_STATUS='sandbox'
+SMART_DEBIT_URL='https://sandbox.ddprocessing.co.uk'
+SMART_DEBIT_PSLID='pslid_test'
+SMART_DEBIT_USERNAME='name_test'
+SMART_DEBIT_PASSWORD='pass_test!'
 ```
 
 ## Response Errors:
