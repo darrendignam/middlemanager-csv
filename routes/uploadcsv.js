@@ -8,7 +8,7 @@ var mmLookup = require('../utility/mm-id-lookup');
 
 var _unitData = require('../utility/unit-data');
 var _unitSizecode = require('../utility/unit-sizecode');
-var _widgets = require('../utility/widgets')
+var _widgets = require('../utility/widgets');
 
 const json2csv = require('json2csv').parse;
 
@@ -206,9 +206,11 @@ router.post('/', upload.single('csvfile'), function (req, res) {
 });
 
 /**
- * This helper function will perform a cascade of API calls and build an object representing the current sites and units and prices
+ * This function processes a reservation row from the CSV File
  * 
  * @param {Array} new_reservation - Array of Customer info taken from a Row in the CSV file
+ * @param {Array} _siteData - Array Object representing the site and unit data of the organisation
+ * @param {Array} _contactData - Array of organsiation contact type IDs
  * @param {callback} callback_function - error and response
  */
 function NewReservation( new_reservation, _siteData, _contactData, callback ){
@@ -246,6 +248,14 @@ function NewReservation( new_reservation, _siteData, _contactData, callback ){
     mm.addCustomerWithReservation(reservation_obj, callback); //don't do anthing with the {err, result} returned by the mm function, let the calling process above handle it.
 }
 
+/**
+ * This function processes a new 'check in' row from the CSV File. This function makes many further API calls and calls the other helper functions below in the file.
+ * 
+ * @param {Array} new_check_in - Array of Customer info taken from a Row in the CSV file
+ * @param {Array} _siteData - Array Object representing the site and unit data of the organisation
+ * @param {Array} _contactData - Array of organsiation contact type IDs
+ * @param {callback} callback_function - error and response
+ */
 function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
     // console.log( new_check_in[0] );
     // callback(null, new_check_in[0]);
@@ -428,6 +438,16 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
 
 }
 
+/**
+ * Uses the API to create a new customer inthe system, and passes the new customer ID back via the callback.
+ * Will try to add their contact details at this stage too.
+ * Will try to add the ASdditional Contact details / person. If they are present.
+ * 
+ * @param {Array} _data_in - Array of Customer info taken from a Row in the CSV file
+ * @param {Array} _siteData - Array Object representing the site and unit data of the organisation
+ * @param {Array} _contactData - Array of organsiation contact type IDs
+ * @param {callback} callback_function - error and response
+ */
 function CreateCustomer(_data_in, _siteData, _contactData, callback){
     let _site = mmLookup.returnSiteId(_data_in[7], _siteData);
     console.log(`LookupIDs: ${_site}`);
@@ -541,6 +561,15 @@ function CreateCustomer(_data_in, _siteData, _contactData, callback){
     });
 }
 
+/**
+ * The main function that does the 'check in' by creating a new order in the StorageManager system via the MiddleManager application.
+ * This function calls a MiddleManager API function, that makes use of multiple WFunctions behind the scenes.
+ * 
+ * @param {Array} _new_check_in - Array of Customer info taken from a Row in the CSV file
+ * @param {Array} _data_in - Object containing all infor about the current order. The customer the reserved unit etc
+ * @param {string} _siteID - The selected site
+ * @param {callback} callback - error and response
+ */
 function CreateCheckIn(_new_check_in, _data_in, _siteID, callback){
     console.log(`LookupIDs: ${_siteID}`);
 
@@ -568,6 +597,12 @@ function CreateCheckIn(_new_check_in, _data_in, _siteID, callback){
     mm.CSV_CheckIn(order_details, callback);
 }
 
+/**
+ * This function will send the customer details to the Smart Debit API to initiate the processes needed for Direct Debit payments for the customer in the future.
+ * 
+ * @param {Array} _data_in - Array of Customer info taken from a Row in the CSV file
+ * @param {callback} callback_function - error and response
+ */
 function ProcessSmartDebit(_data_in, callback){
     let server_url = process.env.SMART_DEBIT_URL;
     let api_validate = '/api/ddi/variable/validate';
