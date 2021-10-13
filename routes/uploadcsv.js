@@ -647,7 +647,7 @@ function ProcessSmartDebit(_data_in, callback){
     let api_validate = '/api/ddi/variable/validate';
     let api_create = '/api/ddi/variable/create';
 
-    let _pslid = 'kmbstoragetest'; //get from the Smart Debit account details
+    let _pslid = process.env.SMART_DEBIT_PSLID;
     let _sd_username = process.env.SMART_DEBIT_USERNAME;
     let _sd_password = process.env.SMART_DEBIT_PASSWORD;
 
