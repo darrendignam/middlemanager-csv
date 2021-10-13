@@ -291,7 +291,7 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
 
     let _site = mmLookup.returnSiteId(new_check_in[7], _siteData);
     let _size = mmLookup.returnSizeCode(new_check_in[6], _siteData);
-    let _bookingid = new_reservation[1];
+    let _bookingid = new_check_in[1];
     let _customer_name = `${new_check_in[9]} ${new_check_in[10]}`;
     let _customer_email = new_check_in[11];
 
@@ -409,7 +409,6 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
                 }
             });
         },
-        //TODO: Add more functions here to handle the images, the direct debit, the additional authorised users, but for now, let's do the simple case.
         (_data_in,async_callback)=>{
             //(4) try and push this to a new order
 
@@ -424,9 +423,11 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
             });
         },
         (_data_in, async_callback)=>{
+            //(5) Smart Debit stuff.....
             //Does the CSV row have 'DD Consent'=='TRUE'??
             //TODO: Could check here for XX-XX-XX XXXXXXXX in the CSV and not try and send that data....
-            if(_data_in[51] == 'TRUE'){
+            //TODO: Actually do something with the XML that is returned!
+            if(new_check_in[51] == 'TRUE'){
                 ProcessSmartDebit( new_check_in, (err, _smart_debit)=>{
                     async_callback(null, _data_in);
                 });
@@ -737,7 +738,7 @@ function ProcessSmartDebit(_data_in, callback){
                     a_callback(err);
                 } else if (res.statusCode != 200) {
                     a_callback({
-                        "error": "Not Found",
+                        "error": "Not Found SD Validate",
                         "type": "404",
                         "number": 404,
                     });
@@ -785,7 +786,7 @@ function ProcessSmartDebit(_data_in, callback){
                     a_callback(err);
                 } else if (res.statusCode != 200) {
                     a_callback({
-                        "error": "Not Found",
+                        "error": "Not Found SD Create",
                         "type": "404",
                         "number": 404,
                     });
