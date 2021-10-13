@@ -394,9 +394,16 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
             });
         },
         (_data_in, async_callback)=>{
-            ProcessSmartDebit( new_check_in, (err, _smart_debit)=>{
+            //Does the CSV row have 'DD Consent'=='TRUE'??
+            //TODO: Could check here for XX-XX-XX XXXXXXXX in the CSV and not try and send that data....
+            if(_data_in[51] == 'TRUE'){
+                ProcessSmartDebit( new_check_in, (err, _smart_debit)=>{
+                    async_callback(null, _data_in);
+                });
+            }else{
                 async_callback(null, _data_in);
-            });
+            }
+
         },
         
     ],(err,final_result)=>{
