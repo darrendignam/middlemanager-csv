@@ -591,32 +591,25 @@ function CreateCheckIn(_new_check_in, _data_in, _siteID, callback){
 }
 
 function ProcessSmartDebit(_data_in, callback){
-    let server_url = 'https://sandbox.ddprocessing.co.uk';
+    let server_url = process.env.SMART_DEBIT_URL;
     let api_validate = '/api/ddi/variable/validate';
     let api_create = '/api/ddi/variable/create';
 
-    let _pslid = ''; //get from the Smart Debit account details
-    let _sd_username = '';
-    let _sd_password = '!';
+    let _pslid = 'kmbstoragetest'; //get from the Smart Debit account details
+    let _sd_username = process.env.SMART_DEBIT_USERNAME;
+    let _sd_password = process.env.SMART_DEBIT_PASSWORD;
 
-    // var needle_options = {
-    //     // username: '', //get from the Smart Debit account details
-    //     // password: '', //get from the Smart Debit account details
-    //     // compressed: true,
-    //     // accept: 'application/json', //not sure this will do anything with smart debit
-    //     content_type: 'application/x-www-form-urlencoded',
-    //     open_timeout: 5000, //max 5 second timeout
-    // };
+    let _SC = ''; let _AN = ''; let _L4D = '';
 
-    //TODO: In the live system use the actual values. Also check for XX in the values, which means that this is a copy of the CSV file.....
-    // let _SC = _data_in[49];
-    // let _AN = _data_in[50];
-    // let _L4D = _AN.substring(4,8);
-
-    // Smart Debit Sandbox Version!!
-    let _SC = '000000';
-    let _AN = '12345678';
-    let _L4D = Math.floor(Math.random()*(9999-1000+1)+1000);
+    if(process.env.SMART_DEBIT_STATUS==='sandbox'){
+        _SC = '000000';
+        _AN = '12345678';
+        _L4D = Math.floor(Math.random()*(9999-1000+1)+1000);
+    }else{
+        _SC = _data_in[49];
+        _AN = _data_in[50];
+        _L4D = _AN.substring(4,8);
+    }
 
     //this is the first three letters of the first and last names and the last four digits of the account number!
     let ddi_ref = `${_data_in[18].substring(0,3).toUpperCase()}${_data_in[19].substring(0,3).toUpperCase()}${_L4D}`
@@ -655,30 +648,10 @@ function ProcessSmartDebit(_data_in, callback){
         function(a_callback) {
             console.log("SD Validate");
             console.log(payload);
-            // needle.post(`${server_url}${api_validate}`, payload, needle_options, function (err, res) {
-            //     console.log(`${server_url}${api_validate}`);
-            //     console.log("err");
-            //     console.log(err);
-            //     console.log("res");
-            //     console.log(res);
-            //     console.log("res end");
 
-            //     if (err) {
-            //         a_callback(err);
-            //     } else if (res.statusCode != 200) {
-            //         a_callback({
-            //             "error": "Not Found",
-            //             "type": "404",
-            //             "number": 404,
-            //         });
-            //     } else if (res.body.error) {
-            //         a_callback(res.body);
-            //     }
-            //     else {
-            //         a_callback(null, res);
-            //     }
-            // });
-            
+            //We dont use needle here as there were headers it didnt like (it is very strict apparently?) so we use the request method as per the smartdebit docs
+
+            // Alternative way to sent the auth details
             // var auth = 'Basic ' + Buffer.from(_sd_username + ':' + _sd_password).toString('base64');
 
             var options = {
