@@ -650,6 +650,7 @@ function CreateCheckIn(_new_check_in, _data_in, _siteID, callback){
  * This function will send the customer details to the Smart Debit API to initiate the processes needed for Direct Debit payments for the customer in the future.
  * 
  * @param {Array} _customer_in - Array of Customer info taken from a Row in the CSV file
+ * @param {Array} _data_in - Current order obnject with customer IDs 
  * @param {callback} callback_function - error and response
  */
 function ProcessSmartDebit(_customer_in, _data_in, callback){
