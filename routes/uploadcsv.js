@@ -6,8 +6,6 @@ var async = require('async-waterfall');
 var mm = require('../utility/mm-wrapper');
 var mmLookup = require('../utility/mm-id-lookup');
 
-var _unitData = require('../utility/unit-data');
-var _unitSizecode = require('../utility/unit-sizecode');
 var _widgets = require('../utility/widgets');
 
 const json2csv = require('json2csv').parse;
@@ -357,7 +355,7 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
 
         (_data_in,async_callback)=>{
             //(2) Get UnitID. Making a reservation will assign us a UnitID
-            mm.getAvaliableUnit(_site, _unitSizecode(new_check_in[4]).SizeCodeID, (err,unit)=>{ //TODO: Use the new Utility Here to get the ID for the sizecode
+            mm.getAvaliableUnit(_site, _size, (err,unit)=>{ //TODO: Use the new Utility Here to get the ID for the sizecode
                 if(err){
                     console.log("Err: getAvaliableUnit");
                     async_callback(err);
@@ -383,7 +381,6 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
                 iReservedOn: _widgets.formatTodayYYYYMMDD(),//Date the user made the reservation in the front end. Not in the CSV so I will use today's date!
                 iMoveIn: _widgets.formatDateYYYYMMDD(new_check_in[16]),
                 iUnit: _data_in.unit.UnitID,//can ignore this and let SM make the assignment
-                //iSizecode:_unitSizecode(new_check_in[3]).SizeCodeID,
                 iDepositAmt: new_check_in[3],
                 iVATAmt:1,
                 iPaymethod:'C6',    //called 'paymentid' in other SpaceManager functions SMH

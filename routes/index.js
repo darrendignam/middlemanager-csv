@@ -5,8 +5,6 @@ var async = require('async-waterfall');
 
 var mm = require('../utility/mm-wrapper');
 var idLookup = require('../utility/mm-id-lookup');
-var _unitData = require('../utility/unit-data');
-var _unitSizecode = require('../utility/unit-sizecode');
 
 const json2csv = require('json2csv').parse;
 
