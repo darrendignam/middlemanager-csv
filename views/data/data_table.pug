@@ -14,10 +14,13 @@ block head_tag
     script(src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js")
 
 block content
-    h1 Results:
-    
-    p
-        a#download_csv.btn.btn-lg.btn-primary Download results in CSV 
+    .container
+        h1 Results:
+        
+        p
+            input(type="text" id="filename" name="filename" value="data.csv")
+            | &nbsp;&nbsp;
+            a#download_csv.btn.btn-lg.btn-primary Download results in CSV 
 
     table.dataTable
         tr
@@ -31,6 +34,10 @@ block content
 
     script. 
         $(document).ready(function(){
+
+            let _nowDate = (new Date()).toLocaleDateString().replace(/\//g, "-");
+            $("#filename").val( `data_${_nowDate}.csv` );
+
             $('#download_csv').click(function() {
                 var titles = [];
                 var data = [];
@@ -63,7 +70,8 @@ block content
                 var blob = new Blob(["\ufeff", CSVString]);
                 var url = URL.createObjectURL(blob);
                 downloadLink.href = url;
-                downloadLink.download = "data.csv";
+                downloadLink.download = $("#filename").val();
+                //- downloadLink.download = "data.csv";
 
                 /*
                 * Actually download CSV
