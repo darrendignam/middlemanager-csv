@@ -464,13 +464,20 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
                 callback({"error" : "SpaceManager failed to create contract", "message" : final_result});
             }else{
                 let result_regex = /(SQLState: 00000SQLCode: 0ContractID:)\s([A-Z0-9]{1,20})/g;
-                let orderid = result_regex.exec(final_result.contract)[2];
-
-                if(!orderid){
+                //let orderid = result_regex.exec(final_result.contract)[2];
+                let orderid = null;
+                let _res_arr = result_regex.exec(final_result.contract);
+                if( _res_arr && _res_arr.length > 0 ){
+                    orderid = _res_arr[2];
+                } else {
                     // the regex above works on my test system. But the response from the demo system in Leeds has a differnt format in the result string!
                     // the above regex expects a single space character \s before the OrderID
+                    
                     let result_regex_NEW = /(SQLState: 00000SQLCode: 0ContractID:)([A-Z0-9]{1,20})/g;
-                    orderid = result_regex_NEW.exec(final_result.contract)[2];
+                    _res_arr = result_regex_NEW.exec(final_result.contract);
+                    if( _res_arr && _res_arr.length ){
+                        orderid = _res_arr[2];
+                    }
                 }
 
                 if( orderid && orderid != ''){
