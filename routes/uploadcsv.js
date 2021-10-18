@@ -465,8 +465,15 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
             }else{
                 let result_regex = /(SQLState: 00000SQLCode: 0ContractID:)\s([A-Z0-9]{1,20})/g;
                 let orderid = result_regex.exec(final_result.contract)[2];
-    
-                if(orderid!=''){
+
+                if(!orderid){
+                    // the regex above works on my test system. But the response from the demo system in Leeds has a differnt format in the result string!
+                    // the above regex expects a single space character \s before the OrderID
+                    let result_regex_NEW = /(SQLState: 00000SQLCode: 0ContractID:)([A-Z0-9]{1,20})/g;
+                    orderid = result_regex_NEW.exec(final_result.contract)[2];
+                }
+
+                if( orderid && orderid != ''){
                     final_result["bookingid"] = _bookingid;
                     final_result["orderid"] = orderid;
                     final_result["name"] = _customer_name;
@@ -475,7 +482,7 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
                     callback(null, final_result);
           
                 }else{
-                    callback({"error" : "SpaceManager returned an empty ID", "message" : final_result});
+                    callback({"error" : "SpaceManager returned an empty ID. Or malformed order string or otherwise failed", "message" : final_result});
                 }
             }
 
