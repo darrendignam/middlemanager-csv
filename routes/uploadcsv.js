@@ -228,6 +228,8 @@ function NewReservation( new_reservation, _siteData, _contactData, callback ){
     let _size = mmLookup.returnSizeCode(new_reservation[6], _siteData);
     console.log(`LookupIDs: ${_site} : ${_size}`);
 
+    let tmp_amount = _widgets.removeVAT( parseInt(new_reservation[3]) ,0.2);
+
     let reservation_obj = {
         isite: _site, 
         isurname: new_reservation[19],
@@ -247,8 +249,8 @@ function NewReservation( new_reservation, _siteData, _contactData, callback ){
         // inumber:    req.body.phonenumber.replace('+','%2B'), //TODO: Use the new methods to add this number to the CUSTOMER later on.
         imovein: _widgets.formatMonthTodayYYYYMMDD(), //new_reservation[33] // need to convert this date to the correct format //TODO: Correct this to one month from now
         isizecode: _size,
-        idepositamt: new_reservation[3],
-        ivatamt: 1, //meh, 1 dont know what to do here! 20% of a fiver is 1 right?
+        idepositamt: tmp_amount, //new_reservation[3],
+        ivatamt: parseInt(new_reservation[3]) - tmp_amount ,
         // ipaymethod: req.body.ipaymethod,
         ipayref: 'creditcard',
         icomment: [new_reservation[0], new_reservation[1], new_reservation[2], new_reservation[4], new_reservation[5], new_reservation[53], new_reservation[56], new_reservation[57]].join(', '),
@@ -375,14 +377,16 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
         (_data_in,async_callback)=>{          
             //(3) Make reservation from Customer and Unit
 
+            let tmp_amount = _widgets.removeVAT( parseInt(new_check_in[3]), 0.20 );
+
             let reservation_obj = {
                 iCustomerID: _data_in.customer.custid,
                 iSite: _site,
                 iReservedOn: _widgets.formatTodayYYYYMMDD(),//Date the user made the reservation in the front end. Not in the CSV so I will use today's date!
                 iMoveIn: _widgets.formatDateYYYYMMDD(new_check_in[16]),
                 iUnit: _data_in.unit.UnitID,//can ignore this and let SM make the assignment
-                iDepositAmt: new_check_in[3],
-                iVATAmt:1,
+                iDepositAmt: tmp_amount,
+                iVATAmt:  parseInt(new_check_in[3]) - tmp_amount  ,
                 iPaymethod:'C6',    //called 'paymentid' in other SpaceManager functions SMH
                 iPayRef:'WorldPay', //called 'paymentref' in other SM functions - sigh
                 iComment:[new_check_in[0], new_check_in[1], new_check_in[2], new_check_in[4], new_check_in[5], new_check_in[53], new_check_in[56], new_check_in[57]].join(', '),
@@ -633,6 +637,8 @@ function CreateCustomer(_data_in, _siteData, _contactData, callback){
 function CreateCheckIn(_new_check_in, _data_in, _siteID, callback){
     console.log(`LookupIDs: ${_siteID}`);
 
+    let tmp_amount = _widgets.removeVAT(parseInt(_new_check_in[3]), 0.2);
+
     let order_details = {
         customerid:         _data_in.customer.custid, //This terrible naming of the custid is what the WFunction returns
         siteid:             _siteID,
@@ -643,7 +649,7 @@ function CreateCheckIn(_new_check_in, _data_in, _siteID, callback){
         invoicefrequency:   1,
         invfreqtype:        'W',
         rateamount:         _new_check_in[13],
-        depositamount:      _new_check_in[3],
+        depositamount:      tmp_amount,//_new_check_in[3],       //TODO: Use the £5 deposit or the £4.17 ??
         amount:             _new_check_in[55]/100,  //TODO: Does this need to be -5 (minus 5) as £5 went to the reservation?
         vatcode:            _data_in.unit.VatCode,
         paymentid:          'C6',

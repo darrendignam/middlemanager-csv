@@ -119,5 +119,14 @@ module.exports = {
         console.log('DD DATE: ' + _dd_date);
         return _dd_date;
     },
+    /**
+     * This function will remove the VAT from a price
+     * 
+     * @param {Number} val - The price or amount with VAT included.
+     * @param {Number} VATrate - The VAT you want to remove. 20% should be entered as 0.20 or 17.5% as 0.175 etc.
+     */
+    removeVAT: (val, VATrate)=>{
+        return Math.round(  (( val * 100 ) / ((VATrate*100)+100) ) * 100) / 100 ;
+    },
 
 };
