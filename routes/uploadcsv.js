@@ -638,6 +638,10 @@ function CreateCheckIn(_new_check_in, _data_in, _siteID, callback){
     console.log(`LookupIDs: ${_siteID}`);
 
     let tmp_amount = _widgets.removeVAT(parseInt(_new_check_in[3]), 0.2);
+    let _insure = 'FALSE';
+    if(_new_check_in[45]== 'FALSE' && _new_check_in[47] == 'accepted'){
+        _insure = 'TRUE';
+    }
 
     let order_details = {
         customerid:         _data_in.customer.custid, //This terrible naming of the custid is what the WFunction returns
@@ -654,6 +658,7 @@ function CreateCheckIn(_new_check_in, _data_in, _siteID, callback){
         vatcode:            _data_in.unit.VatCode,
         paymentid:          'C6',
         paymentref:         'WorldPay',
+        insure:             _insure,
         goodsvalue:         _new_check_in[43],
         salesitems:         _new_check_in[54], //The test items in the CSV had whitespace around the SKU - probably an issue in the data coming from the CSV export tool
         notes:              '', // TO BIG NO POINT //[_new_check_in[42], _new_check_in[0], _new_check_in[1], _new_check_in[4],_new_check_in[5],_new_check_in[6], _new_check_in[53], _new_check_in[56], _new_check_in[57], _new_check_in[37] ].join(', ') ,
