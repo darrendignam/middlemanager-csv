@@ -63,29 +63,29 @@ module.exports = {
      * Using the current date.now + one month!
      * This helper function will convert the date format to the style used by the SpaceManager System.
      */
-         formatMonthTodayYYYYMMDD: () => {
-            var d = new Date(),
-                month = '' + (d.getMonth() + 2),
-                day = '' + d.getDate(),
-                year = d.getFullYear();
-    
-            if (month.length < 2)
-                month = '0' + month;
-            if (day.length < 2)
-                day = '0' + day;
-    
-            return [year, month, day].join('');
-        },
+    formatMonthTodayYYYYMMDD: () => {
+    var d = new Date(),
+        month = '' + (d.getMonth() + 2),
+        day = '' + d.getDate(),
+        year = d.getFullYear();
+
+    if (month.length < 2)
+        month = '0' + month;
+    if (day.length < 2)
+        day = '0' + day;
+
+    return [year, month, day].join('');
+},
 
     /**
-     * Using the current date.now. Add 5 days - the min amount needed for a direct debit mandate to process??? (not sure)
+     * Using the provided date. Add 5 days - the min amount needed for a direct debit mandate to process??? (not sure)
      * Then try and fit that date to either the 14th or 28th of the month? its the day they manually process DD's
      * This helper function will convert the date format to the style used by the Smart Debit System.
      * 
      * At least 5 days away. and then either 14 or 28
      */
-     smartDebit_formatMonthTodayYYYYMMDD: () => {
-        var d = new Date(),
+     smartDebit_formatMonthTodayYYYYMMDD: (in_date) => {
+        var d = new Date(in_date),
             month = '' + (d.getMonth() + 1),
             day = '' + (d.getDate()+5),         //the +5 here is adding 5 days to now, the min time needed for buffering the first DD payment for the banks to do their thing?
             year = d.getFullYear();

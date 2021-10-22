@@ -247,7 +247,8 @@ function NewReservation( new_reservation, _siteData, _contactData, callback ){
         Town: new_reservation[35],
         Postcode: new_reservation[36],
         // inumber:    req.body.phonenumber.replace('+','%2B'), //TODO: Use the new methods to add this number to the CUSTOMER later on.
-        imovein: _widgets.formatMonthTodayYYYYMMDD(), //new_reservation[33] // need to convert this date to the correct format //TODO: Correct this to one month from now
+        // imovein: _widgets.formatMonthTodayYYYYMMDD(), //new_reservation[33] // need to convert this date to the correct format //TODO: Correct this to one month from now
+        imovein: _widgets.formatDateYYYYMMDD(new_reservation[16]), //use the date supplied
         isizecode: _size,
         idepositamt: tmp_amount, //new_reservation[3],
         ivatamt: parseInt(new_reservation[3]) - tmp_amount ,
@@ -676,11 +677,11 @@ function CreateCheckIn(_new_check_in, _data_in, _siteID, callback){
         unitid:             _data_in.unit.UnitID,
         ireservationid:     _data_in.reservation.ReservationID,
         startdate:          _widgets.formatDateYYYYMMDD(_new_check_in[16]),
-        chargetodate:       _widgets.itodateDateYYYYMMDD(_new_check_in[16]), // Set this to like 1 month from now, minus one day?? Format: YYYY-MM-DD
+        chargetodate:       _widgets.smartDebit_formatMonthTodayYYYYMMDD(_new_check_in[16]), // there is some specfic logic for DD that can be used here too
         invoicefrequency:   1,
         invfreqtype:        'W',
         rateamount:         _new_check_in[13],
-        depositamount:      _tmp_amount,//_new_check_in[3],       //TODO: Use the £5 deposit or the £4.17 ??
+        depositamount:      _tmp_amount,
         amount:             _new_check_in[55]/100,  //TODO: Does this need to be -5 (minus 5) as £5 went to the reservation?
         vatcode:            _data_in.unit.VatCode,
         paymentid:          'C6',
@@ -745,7 +746,7 @@ function ProcessSmartDebit(_customer_in, _data_in, callback){
         //#'Variable_ddi[first_amount]': '50',
         'variable_ddi[payer_reference]': ddi_ref,
         //TODO: choose a better time here
-        'variable_ddi[start_date]': widgets.smartDebit_formatMonthTodayYYYYMMDD() ,
+        'variable_ddi[start_date]': widgets.smartDebit_formatMonthTodayYYYYMMDD(_customer_in[16]) ,
         //#'variable_ddi[end_date]': '{{validate_adhoc_end_date}}',
         //#'variable_ddi[title]': '{{validate_adhoc_title}}',
         //#'variable_ddi[address_2]': '{{validate_adhoc_address2}}',
