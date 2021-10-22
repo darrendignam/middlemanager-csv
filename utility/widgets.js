@@ -128,5 +128,15 @@ module.exports = {
     removeVAT: (val, VATrate)=>{
         return Math.round(  (( val * 100 ) / ((VATrate*100)+100) ) * 100) / 100 ;
     },
+    /**
+     * This function will convert weelky to rates to monthly rates.
+     * 
+     * @param {Number} rate - The price or amount with VAT included.
+     */
+     convertWtoM: (rate)=>{
+        return Math.round( ((rate * 52)/12) * 100) / 100;
+    },
+
+    
 
 };

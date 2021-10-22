@@ -638,7 +638,8 @@ function CreateCustomer(_data_in, _siteData, _contactData, callback){
 function CreateCheckIn(_new_check_in, _data_in, _siteID, callback){
     console.log(`LookupIDs: ${_siteID}`);
 
-    let _tmp_amount = _widgets.removeVAT(parseInt(_new_check_in[3]), 0.2);
+    let _monthRate = _widgets.convertWtoM( parseInt(_new_check_in[13]) );
+    let _tmp_amount = _widgets.removeVAT( parseInt(_new_check_in[3]), 0.2 );
     let _insure = 'FALSE';
     let _insureid = 'I1';
     let _goodsvalue = _new_check_in[43];
@@ -679,8 +680,8 @@ function CreateCheckIn(_new_check_in, _data_in, _siteID, callback){
         startdate:          _widgets.formatDateYYYYMMDD(_new_check_in[16]),
         chargetodate:       _widgets.smartDebit_formatMonthTodayYYYYMMDD(_new_check_in[16]), // there is some specfic logic for DD that can be used here too
         invoicefrequency:   1,
-        invfreqtype:        'W',
-        rateamount:         _new_check_in[13],
+        invfreqtype:        'M',
+        rateamount:         _monthRate,
         depositamount:      _tmp_amount,
         amount:             _new_check_in[55]/100,  //TODO: Does this need to be -5 (minus 5) as £5 went to the reservation?
         vatcode:            _data_in.unit.VatCode,
