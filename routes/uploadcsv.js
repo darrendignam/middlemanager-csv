@@ -688,7 +688,7 @@ function CreateCheckIn(_new_check_in, _data_in, _siteID, callback){
         paymentid:          'C6',
         paymentref:         'WorldPay',
         insure:             _insure,
-        insureid:           _insureid,
+        insuresku:           _insureid,
         insurerate:          _new_check_in[44],
         goodsvalue:         _goodsvalue,
         salesitems:         _new_check_in[54], //The test items in the CSV had whitespace around the SKU - probably an issue in the data coming from the CSV export tool
