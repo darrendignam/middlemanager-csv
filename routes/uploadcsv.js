@@ -124,7 +124,7 @@ router.post('/', upload.single('csvfile'), function (req, res) {
                                     //console.log(`${i} : ${s}`);
                                 }
 
-                                console.log(`Customer: "${current_csv_row[6]} ${current_csv_row[7]}"`)
+                                console.log(`Customer: ${current_csv_row[1]}: "${current_csv_row[9]} ${current_csv_row[10]}"`)
 
                                 //TODO: Perhaps use column 0 to do this now - as it has a field to say explicity what the  row represents
                                 if(current_csv_row[55] == ""){
