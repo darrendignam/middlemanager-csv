@@ -680,7 +680,7 @@ function CreateCheckIn(_new_check_in, _data_in, _siteID, callback){
         startdate:          _widgets.formatDateYYYYMMDD(_new_check_in[16]),
         chargetodate:       _widgets.smartDebit_formatMonthTodayYYYYMMDD(_new_check_in[16]), // there is some specfic logic for DD that can be used here too
         invoicefrequency:   1,
-        invfreqtype:        'M',
+        invfreqtype:        'M',//CSV rates come in weekly format, but the business wants to bill in M
         rateamount:         _monthRate,
         depositamount:      _tmp_amount,
         amount:             _new_check_in[55]/100,  //TODO: Does this need to be -5 (minus 5) as £5 went to the reservation?
