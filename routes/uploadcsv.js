@@ -637,10 +637,37 @@ function CreateCustomer(_data_in, _siteData, _contactData, callback){
 function CreateCheckIn(_new_check_in, _data_in, _siteID, callback){
     console.log(`LookupIDs: ${_siteID}`);
 
-    let tmp_amount = _widgets.removeVAT(parseInt(_new_check_in[3]), 0.2);
+    let _tmp_amount = _widgets.removeVAT(parseInt(_new_check_in[3]), 0.2);
     let _insure = 'FALSE';
+    let _insureid = 'I1';
+    let _goodsvalue = _new_check_in[43];
+
     if(_new_check_in[45]== 'FALSE' && _new_check_in[47] == 'accepted'){
         _insure = 'TRUE';
+        // This is some business logic based onthe bands of insurance used - needed a new WFunction on the server side. Plus the ledgeritems witrh these names need to exist...
+        switch(_goodsvalue){
+            case(_goodsvalue <= 1000):
+                _insureid = 'I1';
+                break;
+            case(_goodsvalue <= 2000):
+                _insureid = 'I2';
+                break;
+            case(_goodsvalue <= 3000):
+                _insureid = 'I3';
+                break;
+            case(_goodsvalue <= 5000):
+                _insureid = 'I5';
+                break;
+            case(_goodsvalue <= 7000):
+                _insureid = 'I7';
+                break;
+            case(_goodsvalue <= 9000):
+                _insureid = 'I9';
+                break;
+            case(_goodsvalue <= 10000):
+                _insureid = 'I10';
+                break;    
+        }
     }
 
     let order_details = {
@@ -653,13 +680,15 @@ function CreateCheckIn(_new_check_in, _data_in, _siteID, callback){
         invoicefrequency:   1,
         invfreqtype:        'W',
         rateamount:         _new_check_in[13],
-        depositamount:      tmp_amount,//_new_check_in[3],       //TODO: Use the £5 deposit or the £4.17 ??
+        depositamount:      _tmp_amount,//_new_check_in[3],       //TODO: Use the £5 deposit or the £4.17 ??
         amount:             _new_check_in[55]/100,  //TODO: Does this need to be -5 (minus 5) as £5 went to the reservation?
         vatcode:            _data_in.unit.VatCode,
         paymentid:          'C6',
         paymentref:         'WorldPay',
         insure:             _insure,
-        goodsvalue:         _new_check_in[43],
+        insureid:           _insureid,
+        insurerate:          _new_check_in[44],
+        goodsvalue:         _goodsvalue,
         salesitems:         _new_check_in[54], //The test items in the CSV had whitespace around the SKU - probably an issue in the data coming from the CSV export tool
         notes:              '', // TO BIG NO POINT //[_new_check_in[42], _new_check_in[0], _new_check_in[1], _new_check_in[4],_new_check_in[5],_new_check_in[6], _new_check_in[53], _new_check_in[56], _new_check_in[57], _new_check_in[37] ].join(', ') ,
 
