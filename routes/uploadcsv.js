@@ -59,6 +59,8 @@ router.post('/', upload.single('csvfile'), function (req, res) {
                     }
                 }
 
+                console.log("Processing CSV File....");
+
                 // Get the IDs from the SM database so we dont have to have them hard coded everywhere!!
                 async([  
                     function(callback){
@@ -122,6 +124,7 @@ router.post('/', upload.single('csvfile'), function (req, res) {
                                     //console.log(`${i} : ${s}`);
                                 }
 
+                                console.log(`Customer: "${current_csv_row[6]} ${current_csv_row[7]}"`)
 
                                 //TODO: Perhaps use column 0 to do this now - as it has a field to say explicity what the  row represents
                                 if(current_csv_row[55] == ""){
@@ -435,10 +438,14 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
             //TODO: Actually do something with the XML that is returned!
             if(new_check_in[51] == 'TRUE'){
                 ProcessSmartDebit( new_check_in, _data_in, (err, _smart_debit)=>{
-                    if( _smart_debit[0] && _smart_debit[0].custpayid ){
-                        _data_in['bankaccount'] = _smart_debit[0].custpayid ;
+                    if(err){
+                        console.log( err );
                     }else{
-                        _data_in['bankaccount'] = '';
+                        if( _smart_debit && _smart_debit.length>0 && _smart_debit[0] && _smart_debit[0].custpayid ){
+                            _data_in['bankaccount'] = _smart_debit[0].custpayid ;
+                        }else{
+                            _data_in['bankaccount'] = '';
+                        }
                     }
                     async_callback(null, _data_in);
                 });
