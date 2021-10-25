@@ -649,7 +649,7 @@ function CreateCheckIn(_new_check_in, _data_in, _siteID, callback){
     let _tmp_amount = _widgets.removeVAT( parseInt(_new_check_in[3]), 0.2 );
     let _insure = 'FALSE';
     let _insureid = 'I1';
-    let _goodsvalue = _new_check_in[43];
+    let _goodsvalue = parseInt(_new_check_in[43]);
 
     if(_new_check_in[45]== 'FALSE' && _new_check_in[47] == 'accepted'){
         _insure = 'TRUE';
