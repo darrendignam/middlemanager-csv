@@ -675,7 +675,14 @@ function CreateCheckIn(_new_check_in, _data_in, _siteID, callback){
                 break;
             case(_goodsvalue <= 10000):
                 _insureid = 'I10';
-                break;    
+                break;
+
+            // case(_goodsvalue > 10000):
+            //     _insureid = 'I11';
+            //     break;
+
+            default:
+                _insureid = 'I1';
         }
     }
 
