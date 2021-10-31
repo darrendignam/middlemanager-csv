@@ -559,6 +559,7 @@ function CreateCustomer(_data_in, _siteData, _contactData, callback){
                     // "itypeid":"RI16CXRI08022018007O", 
                     "itypeid" : mmLookup.returnContactId('Mobile', _contactData),
                     "inumber": _data_in[12],
+                    "iprimary": 1,
                 },(err, _newContact)=>{
                     console.log("[][][][][][] NEW MOBILE [][][][][]");
                     console.log(err);
@@ -577,6 +578,7 @@ function CreateCustomer(_data_in, _siteData, _contactData, callback){
                     "icustomerid": _customer[0].custid, 
                     "itypeid" : mmLookup.returnContactId('Email', _contactData),
                     "inumber": _data_in[11],
+                    "iprimary": 1,
                 },(err, _newContact)=>{
                     console.log("[][][][][][] NEW EMAIL [][][][][]");
                     console.log(err);
