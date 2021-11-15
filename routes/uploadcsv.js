@@ -723,6 +723,8 @@ function CreateCheckIn(_new_check_in, _data_in, _siteID, callback){
  * @param {callback} callback_function - error and response
  */
 function ProcessSmartDebit(_customer_in, _data_in, callback){
+    console.log("Function: ProcessSmartDebit");
+
     let server_url = process.env.SMART_DEBIT_URL;
     let api_validate = '/api/ddi/variable/validate';
     let api_create = '/api/ddi/variable/create';
