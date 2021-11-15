@@ -19,6 +19,12 @@ const widgets = require('../utility/widgets');
 
 const upload = multer({ dest: 'uploadedcsv/' });
 
+// This module has an array/object with human readable names for the CSV columns numbers so debugging and reading the code is a bit easier when ever we are pulling random 
+// columns from the current row of the CSV
+let _csv  = require('../utility/csv-col-names');
+
+// console.log( _csv['0 Type'] );
+
 //for smart debit......
 // var needle = require("needle");
 var request = require('request');
@@ -124,10 +130,10 @@ router.post('/', upload.single('csvfile'), function (req, res) {
                                     //console.log(`${i} : ${s}`);
                                 }
 
-                                console.log(`Customer: ${current_csv_row[1]}: "${current_csv_row[9]} ${current_csv_row[10]}"`)
+                                console.log(`Customer: ${current_csv_row[ _csv['1 Booking-ID'] ]}: "${current_csv_row[ _csv['9 First-Name'] ]} ${current_csv_row[ _csv['10 Surname'] ]}"`)
 
                                 //TODO: Perhaps use column 0 to do this now - as it has a field to say explicity what the  row represents
-                                if(current_csv_row[55] == ""){
+                                if(current_csv_row[ _csv['55 Upfront-Payment-Amount'] ] == ""){
                                     NewReservation( current_csv_row, g_siteData, g_contactData, (err, result)=>{
                                         if (err) {
                                             nextCallback(err);
@@ -223,41 +229,41 @@ router.post('/', upload.single('csvfile'), function (req, res) {
  */
 function NewReservation( new_reservation, _siteData, _contactData, callback ){
     // construct the data to send to the WFunction
-    let _bookingid = new_reservation[1];
-    let _customer_name = `${new_reservation[9]} ${new_reservation[10]}`;
-    let _customer_email = new_reservation[11];
+    let _bookingid = new_reservation[ _csv['1 Booking-ID'] ];
+    let _customer_name = `${new_reservation[ _csv['9 First-Name'] ]} ${new_reservation[ _csv['10 Surname'] ]}`;
+    let _customer_email = new_reservation[ _csv['11 Email'] ];
 
-    let _site = mmLookup.returnSiteId(new_reservation[7], _siteData);
-    let _size = mmLookup.returnSizeCode(new_reservation[6], _siteData);
+    let _site = mmLookup.returnSiteId(new_reservation[ _csv['7 Location-Code'] ], _siteData);
+    let _size = mmLookup.returnSizeCode(new_reservation[ _csv['6 Size-Code'] ], _siteData);
     console.log(`LookupIDs: ${_site} : ${_size}`);
 
-    let tmp_amount = _widgets.removeVAT( parseInt(new_reservation[3]) ,0.2);
+    let tmp_amount = _widgets.removeVAT( parseInt(new_reservation[ _csv['3 Reservation-Amount-Paid'] ]) ,0.2);
 
     let reservation_obj = {
         isite: _site, 
-        isurname: new_reservation[19],
-        iforenames: new_reservation[18],
-        ititle: new_reservation[17],
-        iAdd1: new_reservation[22],
-        iAdd2: new_reservation[23],
-        iAdd3: new_reservation[24],
-        iTown: new_reservation[25],
-        iPostcode: new_reservation[26],
-        iemailaddress: new_reservation[11],
-        Add1: new_reservation[32],
-        Add2: new_reservation[33],
-        Add3: new_reservation[34],
-        Town: new_reservation[35],
-        Postcode: new_reservation[36],
+        isurname: new_reservation[_csv['19 Billing-Surname']],
+        iforenames: new_reservation[_csv['18 Billing-First-Name']],
+        ititle: new_reservation[_csv['17 Billing-Title']],
+        iAdd1: new_reservation[_csv['22 Billing-Address-Line-One']],
+        iAdd2: new_reservation[_csv['23 Billing-Address-Line-Two']],
+        iAdd3: new_reservation[_csv['24 Billing-Address-Line-Three']],
+        iTown: new_reservation[_csv['25 Billing-City']],
+        iPostcode: new_reservation[_csv['26 Billing-PostCode']],
+        iemailaddress: new_reservation[_csv['11 Email']],
+        Add1: new_reservation[_csv['32 Correspondance-Address-Line-One']],
+        Add2: new_reservation[_csv['33 Correspondance-Address-Line-Two']],
+        Add3: new_reservation[_csv['34 Correspondance-Address-Line-Three']],
+        Town: new_reservation[_csv['35 Correspondance-City']],
+        Postcode: new_reservation[_csv['36 Correspondance-PostCode']],
         // inumber:    req.body.phonenumber.replace('+','%2B'), //TODO: Use the new methods to add this number to the CUSTOMER later on.
         // imovein: _widgets.formatMonthTodayYYYYMMDD(), //new_reservation[33] // need to convert this date to the correct format //TODO: Correct this to one month from now
-        imovein: _widgets.formatDateYYYYMMDD(new_reservation[16]), //use the date supplied
+        imovein: _widgets.formatDateYYYYMMDD(new_reservation[_csv['16 Moving-In-Date']]), //use the date supplied
         isizecode: _size,
         idepositamt: tmp_amount, //new_reservation[3],
-        ivatamt: parseInt(new_reservation[3]) - tmp_amount ,
+        ivatamt: parseInt(new_reservation[_csv['3 Reservation-Amount-Paid']]) - tmp_amount ,
         // ipaymethod: req.body.ipaymethod,
         ipayref: 'creditcard',
-        icomment: [new_reservation[0], new_reservation[1], new_reservation[2], new_reservation[4], new_reservation[5], new_reservation[53], new_reservation[56], new_reservation[57]].join(', '),
+        icomment: [new_reservation[_csv['0 Type']], new_reservation[_csv['1 Booking-ID']], new_reservation[_csv['2 Reservation-Transaction-ID']], new_reservation[_csv['4 Container-Size']], new_reservation[_csv['5 Container-ID']], new_reservation[_csv['53 eSignDocumentId']], new_reservation[_csv['56 Upfront-Transaction-ID']], new_reservation[_csv['57 Upfront-Transaction-Date']]].join(', '),
     }
     mm.addCustomerWithReservation(reservation_obj, (err, reservation)=>{
         if(err){
@@ -297,11 +303,11 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
     // console.log( new_check_in[0] );
     // callback(null, new_check_in[0]);
 
-    let _site = mmLookup.returnSiteId(new_check_in[7], _siteData);
-    let _size = mmLookup.returnSizeCode(new_check_in[6], _siteData);
-    let _bookingid = new_check_in[1];
-    let _customer_name = `${new_check_in[9]} ${new_check_in[10]}`;
-    let _customer_email = new_check_in[11];
+    let _site = mmLookup.returnSiteId(new_check_in[_csv['7 Location-Code']], _siteData);
+    let _size = mmLookup.returnSizeCode(new_check_in[_csv['6 Size-Code']], _siteData);
+    let _bookingid = new_check_in[_csv['1 Booking-ID']];
+    let _customer_name = `${new_check_in[_csv['9 First-Name']]} ${new_check_in[_csv['10 Surname']]}`;
+    let _customer_email = new_check_in[_csv['11 Email']];
 
     console.log(`LookupIDs: ${_site} : ${_size}`);
 
@@ -321,9 +327,9 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
         (_data_in,async_callback)=>{
             //(1a) upload image 1
             if(new_check_in[40]!=''){
-                console.log(`Image URL: ${new_check_in[40]}`);
+                console.log(`Image URL: ${new_check_in[_csv['40 Photo-ID-Document']]}`);
 
-                mm.encodeBase64_URI(new_check_in[40], (err, result)=>{
+                mm.encodeBase64_URI(new_check_in[_csv['40 Photo-ID-Document']], (err, result)=>{
                     if(err){
                         console.log("Err: encodeBase64");
                         _data_in["photoid"] = JSON.stringify(err);
@@ -333,7 +339,7 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
                             iCustId: _data_in.customer.custid,
                             iBlob: result.raw, //raw gives success but still no image appearing in the DB
                             iDescription:'Photo ID Document',
-                            iFileType:new_check_in[40].split('.').pop()
+                            iFileType:new_check_in[_csv['40 Photo-ID-Document']].split('.').pop()
                         };
                         console.log( img_obj.iFileType );
                         console.log( result.content_type );
@@ -381,19 +387,19 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
         (_data_in,async_callback)=>{          
             //(3) Make reservation from Customer and Unit
 
-            let tmp_amount = _widgets.removeVAT( parseInt(new_check_in[3]), 0.20 );
+            let tmp_amount = _widgets.removeVAT( parseInt(new_check_in[_csv['3 Reservation-Amount-Paid']]), 0.20 );
 
             let reservation_obj = {
                 iCustomerID: _data_in.customer.custid,
                 iSite: _site,
                 iReservedOn: _widgets.formatTodayYYYYMMDD(),//Date the user made the reservation in the front end. Not in the CSV so I will use today's date!
-                iMoveIn: _widgets.formatDateYYYYMMDD(new_check_in[16]),
+                iMoveIn: _widgets.formatDateYYYYMMDD(new_check_in[_csv['16 Moving-In-Date']]),
                 iUnit: _data_in.unit.UnitID,//can ignore this and let SM make the assignment
                 iDepositAmt: tmp_amount,
-                iVATAmt:  parseInt(new_check_in[3]) - tmp_amount  ,
+                iVATAmt:  parseInt(new_check_in[_csv['3 Reservation-Amount-Paid']]) - tmp_amount  ,
                 iPaymethod:'C6',    //called 'paymentid' in other SpaceManager functions SMH
                 iPayRef:'WorldPay', //called 'paymentref' in other SM functions - sigh
-                iComment:[new_check_in[0], new_check_in[1], new_check_in[2], new_check_in[4], new_check_in[5], new_check_in[53], new_check_in[56], new_check_in[57]].join(', '),
+                iComment:[new_check_in[_csv['0 Type']], new_check_in[_csv['1 Booking-ID']], new_check_in[_csv['2 Reservation-Transaction-ID']], new_check_in[_csv['4 Container-Size']], new_check_in[_csv['5 Container-ID']], new_check_in[_csv['53 eSignDocumentId']], new_check_in[_csv['56 Upfront-Transaction-ID']], new_check_in[_csv['57 Upfront-Transaction-Date']]].join(', '),
 
             }
             console.log("ResObj:");
@@ -436,7 +442,7 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
             //Does the CSV row have 'DD Consent'=='TRUE'??
             //TODO: Could check here for XX-XX-XX XXXXXXXX in the CSV and not try and send that data....
             //TODO: Actually do something with the XML that is returned!
-            if(new_check_in[51] == 'TRUE' || new_check_in[51] == 'true'){
+            if(new_check_in[_csv['51 DD-Consent']] == 'TRUE' || new_check_in[_csv['51 DD-Consent']] == 'true'){
                 ProcessSmartDebit( new_check_in, _data_in, (err, _smart_debit)=>{
                     if(err){
                         console.log( err );
@@ -521,7 +527,7 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
  * @param {callback} callback_function - error and response
  */
 function CreateCustomer(_data_in, _siteData, _contactData, callback){
-    let _site = mmLookup.returnSiteId(_data_in[7], _siteData);
+    let _site = mmLookup.returnSiteId(_data_in[_csv['7 Location-Code']], _siteData);
     console.log(`LookupIDs: ${_site}`);
 
     async([
@@ -531,22 +537,22 @@ function CreateCustomer(_data_in, _siteData, _contactData, callback){
             mm.addCustomer({
                 "idoreturn": 1, //return CustomerID (true / false)
                 "isite": _site,//TODO: Use our new functions to get this value
-                "isurname": _data_in[19],
-                "iforenames": _data_in[18],
-                "ititle": _data_in[17],
-                "iAdd1": _data_in[22],
-                "iAdd2": _data_in[23],
-                "iAdd3": _data_in[24],
-                "iTown": _data_in[25],
-                "iPostcode": _data_in[26],
-                "Add1": _data_in[32],
-                "Add2": _data_in[33],
-                "Add3": _data_in[34],
-                "Town": _data_in[35],
-                "Postcode": _data_in[36],
+                "isurname": _data_in[_csv['19 Billing-Surname']],
+                "iforenames": _data_in[_csv['18 Billing-First-Name']],
+                "ititle": _data_in[_csv['17 Billing-Title']],
+                "iAdd1": _data_in[_csv['22 Billing-Address-Line-One']],
+                "iAdd2": _data_in[_csv['23 Billing-Address-Line-Two']],
+                "iAdd3": _data_in[_csv['24 Billing-Address-Line-Three']],
+                "iTown": _data_in[_csv['25 Billing-City']],
+                "iPostcode": _data_in[_csv['26 Billing-PostCode']],
+                "Add1": _data_in[_csv['32 Correspondance-Address-Line-One']],
+                "Add2": _data_in[_csv['33 Correspondance-Address-Line-Two']],
+                "Add3": _data_in[_csv['34 Correspondance-Address-Line-Three']],
+                "Town": _data_in[_csv['35 Correspondance-City']],
+                "Postcode": _data_in[_csv['36 Correspondance-PostCode']],
                 // "idob": null,
-                "inotes": [ _data_in[0], _data_in[1], _data_in[2], _data_in[4], _data_in[5], _data_in[6], _data_in[53], _data_in[56], _data_in[57], _data_in[42], _data_in[54] ].join(', ') ,
-                "iemailaddress": _data_in[11],
+                "inotes": [ _data_in[_csv['0 Type']], _data_in[_csv['1 Booking-ID']], _data_in[_csv['2 Reservation-Transaction-ID']], _data_in[_csv['4 Container-Size']], _data_in[_csv['5 Container-ID']], _data_in[_csv['6 Size-Code']], _data_in[_csv['53 eSignDocumentId']], _data_in[_csv['56 Upfront-Transaction-ID']], _data_in[_csv['57 Upfront-Transaction-Date']], _data_in[_csv['42 Authorised-Persons']], _data_in[_csv['54 Optional-Extras']] ].join(', ') ,
+                "iemailaddress": _data_in[_csv['11 Email']],
             }, callback );
         },
         //add mobile phone
@@ -558,7 +564,7 @@ function CreateCustomer(_data_in, _siteData, _contactData, callback){
                     /*"iphoneid":"null",*/ 
                     // "itypeid":"RI16CXRI08022018007O", 
                     "itypeid" : mmLookup.returnContactId('Mobile', _contactData),
-                    "inumber": _data_in[12],
+                    "inumber": _data_in[_csv['12 Telephone']],
                     "iprimary": 1,
                 },(err, _newContact)=>{
                     console.log("[][][][][][] NEW MOBILE [][][][][]");
@@ -577,7 +583,7 @@ function CreateCustomer(_data_in, _siteData, _contactData, callback){
                 {
                     "icustomerid": _customer[0].custid, 
                     "itypeid" : mmLookup.returnContactId('Email', _contactData),
-                    "inumber": _data_in[11],
+                    "inumber": _data_in[_csv['11 Email']],
                     "iprimary": 1,
                 },(err, _newContact)=>{
                     console.log("[][][][][][] NEW EMAIL [][][][][]");
@@ -593,8 +599,8 @@ function CreateCustomer(_data_in, _siteData, _contactData, callback){
         function(_customer, callback){
             //if the fiels is not empty:
 
-            if(_data_in[42] != ''){ //Authorised Persons field
-                let AuthPerson = JSON.parse(_data_in[42]);
+            if(_data_in[_csv['42 Authorised-Persons']] != ''){ //Authorised Persons field
+                let AuthPerson = JSON.parse(_data_in[_csv['42 Authorised-Persons']]);
                 //[{"title":"Miss","firstName":"Alex","surname":"Smith","emailAddress":"alexsmith@gmail.com","addressLineOne":"10 Roseville Road","addressLineTwo":"","addressLineThree":"","city":"Leeds","postCode":"LS12 4HP","carRegistration":"","mobile":"01134269111","notified":"1","isPrimaryContact":"1","isAuthorisedForAccess":"1","isAuthorisedForAccount":"1"}]
                 mm.post_request("/api/v1/base/WAddPerson",
                     {
@@ -647,13 +653,14 @@ function CreateCustomer(_data_in, _siteData, _contactData, callback){
 function CreateCheckIn(_new_check_in, _data_in, _siteID, callback){
     console.log(`LookupIDs: ${_siteID}`);
 
-    let _monthRate = _widgets.convertWtoM( parseInt(_new_check_in[13]) );
-    let _tmp_amount = _widgets.removeVAT( parseInt(_new_check_in[3]), 0.2 );
+    let _monthRate = _widgets.convertWtoM( parseInt(_new_check_in[_csv['13 Weekly-Price']]) );
+    let _tmp_amount = _widgets.removeVAT( parseInt(_new_check_in[_csv['3 Reservation-Amount-Paid']]), 0.2 );
     let _insure = 'FALSE';
     let _insureid = 'I1';
-    let _goodsvalue = parseInt(_new_check_in[43]);
+    let _goodsvalue = parseInt(_new_check_in[_csv['43 Insurance-Amount']]);
 
-    if(_new_check_in[45]== 'FALSE' && _new_check_in[47] == 'accepted'){
+    //Checking for the fields that determine if the custoemr wants insurence?
+    if(_new_check_in[_csv['45 Insurance-Declined']]== 'FALSE' && _new_check_in[_csv['47 Insurance-Type']] == 'accepted'){
         _insure = 'TRUE';
         // This is some business logic based onthe bands of insurance used - needed a new WFunction on the server side. Plus the ledgeritems witrh these names need to exist...
         switch(_goodsvalue){
@@ -693,21 +700,21 @@ function CreateCheckIn(_new_check_in, _data_in, _siteID, callback){
         siteid:             _siteID,
         unitid:             _data_in.unit.UnitID,
         ireservationid:     _data_in.reservation.ReservationID,
-        startdate:          _widgets.formatDateYYYYMMDD(_new_check_in[16]),
-        chargetodate:       _widgets.smartDebit_formatMonthTodayYYYYMMDD(_new_check_in[16]), // there is some specfic logic for DD that can be used here too
+        startdate:          _widgets.formatDateYYYYMMDD(_new_check_in[_csv['16 Moving-In-Date']]),
+        chargetodate:       _widgets.smartDebit_formatMonthTodayYYYYMMDD(_new_check_in[_csv['16 Moving-In-Date']]), // there is some specfic logic for DD that can be used here too
         invoicefrequency:   1,
         invfreqtype:        'M',//CSV rates come in weekly format, but the business wants to bill in M
         rateamount:         _monthRate,
         depositamount:      _tmp_amount,
-        amount:             _new_check_in[55]/100,  //TODO: Does this need to be -5 (minus 5) as £5 went to the reservation?
+        amount:             _new_check_in[_csv['55 Upfront-Payment-Amount']]/100,  //TODO: Does this need to be -5 (minus 5) as £5 went to the reservation?
         vatcode:            _data_in.unit.VatCode,
         paymentid:          'C6',
         paymentref:         'WorldPay',
         insure:             _insure,
         insuresku:           _insureid,
-        insurerate:          _new_check_in[44],
+        insurerate:          _new_check_in[_csv['44 Insurance-Price']],
         goodsvalue:         _goodsvalue,
-        salesitems:         _new_check_in[54], //The test items in the CSV had whitespace around the SKU - probably an issue in the data coming from the CSV export tool
+        salesitems:         _new_check_in[_csv['54 Optional-Extras']], //The test items in the CSV had whitespace around the SKU - probably an issue in the data coming from the CSV export tool
         notes:              '', // TO BIG NO POINT //[_new_check_in[42], _new_check_in[0], _new_check_in[1], _new_check_in[4],_new_check_in[5],_new_check_in[6], _new_check_in[53], _new_check_in[56], _new_check_in[57], _new_check_in[37] ].join(', ') ,
 
     };
@@ -740,38 +747,38 @@ function ProcessSmartDebit(_customer_in, _data_in, callback){
         _AN = '12345678';
         _L4D = Math.floor(Math.random()*(9999-1000+1)+1000);
     }else{
-        _SC = _customer_in[49];
-        _AN = _customer_in[50];
+        _SC = _customer_in[_csv['49 DD-Sort-Code']];
+        _AN = _customer_in[_csv['50 DD-Account-Number']];
         _L4D = _AN.substring(4,8);
     }
 
     //this is the first three letters of the first and last names and the last four digits of the account number!
-    let ddi_ref = `${_customer_in[18].substring(0,3).toUpperCase()}${_customer_in[19].substring(0,3).toUpperCase()}${_L4D}`
+    let ddi_ref = `${_customer_in[_csv['18 Billing-First-Name']].substring(0,3).toUpperCase()}${_customer_in[_csv['19 Billing-Surname']].substring(0,3).toUpperCase()}${_L4D}`
 
     let payload={
         'variable_ddi[sort_code]': _SC,
         'variable_ddi[account_number]': _AN,
         'variable_ddi[reference_number]': ddi_ref,
-        'variable_ddi[first_name]': _customer_in[18],
-        'variable_ddi[last_name]': _customer_in[19],     //#csv_in['Billing First Name'][i]
-        'variable_ddi[address_1]': _customer_in[22].replace(/,/g, '.'),  // <error>Address 1 only letters, numbers, spaces, hyphens, forward slash, ampersand and full stops are permitted in address 1</error> // no commas!
-        'variable_ddi[town]': _customer_in[25],
-        'variable_ddi[postcode]': _customer_in[26],
+        'variable_ddi[first_name]': _customer_in[_csv['18 Billing-First-Name']],
+        'variable_ddi[last_name]': _customer_in[_csv['19 Billing-Surname']],     //#csv_in['Billing First Name'][i]
+        'variable_ddi[address_1]': _customer_in[_csv['22 Billing-Address-Line-One']].replace(/,/g, '.'),  // <error>Address 1 only letters, numbers, spaces, hyphens, forward slash, ampersand and full stops are permitted in address 1</error> // no commas!
+        'variable_ddi[town]': _customer_in[_csv['25 Billing-City']],
+        'variable_ddi[postcode]': _customer_in[_csv['26 Billing-PostCode']],
         'variable_ddi[country]': 'UK',  //TODO: There is no CSV data with the country!?
-        'variable_ddi[account_name]': _customer_in[48].substring(0,18), // <error>Account name is too long (maximum is 18 characters)</error> //API errors!
+        'variable_ddi[account_name]': _customer_in[_csv['48 DD-Name']].substring(0,18), // <error>Account name is too long (maximum is 18 characters)</error> //API errors!
         'variable_ddi[service_user][pslid]': _pslid,
         'variable_ddi[frequency_type]': 'M',
         'variable_ddi[default_amount]': '0',
         //#'Variable_ddi[first_amount]': '50',
         'variable_ddi[payer_reference]': ddi_ref,
         //TODO: choose a better time here
-        'variable_ddi[start_date]': widgets.smartDebit_formatMonthTodayYYYYMMDD(_customer_in[16]) ,
-        //#'variable_ddi[end_date]': '{{validate_adhoc_end_date}}',
+        'variable_ddi[start_date]': widgets.smartDebit_formatMonthTodayYYYYMMDD(_customer_in[_csv['16 Moving-In-Date']]) ,
+        //#'variable_ddi[end_date]': '{{validate_adhoc_end_date}}', //these curly brackets items come straight from the XML widget in the Desktop SM app, and were commented out there, so I have left them commented here too
         //#'variable_ddi[title]': '{{validate_adhoc_title}}',
         //#'variable_ddi[address_2]': '{{validate_adhoc_address2}}',
         //#'variable_ddi[address_3]': '{{validate_adhoc_address3}}',
         //#'variable_ddi[county]': '{{validate_adhoc_county}}',
-        'variable_ddi[email_address]': _customer_in[11],
+        'variable_ddi[email_address]': _customer_in[_csv['11 Email']],
         //#'variable_ddi[promotion]': '{{validate_adhoc_promotion}}',
         //#'variable_ddi[company_name]': '{{validate_adhoc_company_name}}'
     }
