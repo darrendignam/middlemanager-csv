@@ -444,13 +444,13 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
                         if( _smart_debit && _smart_debit.length>0 && _smart_debit[0] && _smart_debit[0].custpayid ){
                             _data_in['bankaccount'] = _smart_debit[0].custpayid ;
                         }else{
-                            _data_in['bankaccount'] = '';
+                            _data_in['bankaccount'] = 'ERROR';
                         }
                     }
                     async_callback(null, _data_in);
                 });
             }else{
-                _data_in['bankaccount'] = '';
+                _data_in['bankaccount'] = 'DENIED';
                 async_callback(null, _data_in);
             }
 
