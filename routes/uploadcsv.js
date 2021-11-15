@@ -442,6 +442,10 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
             //Does the CSV row have 'DD Consent'=='TRUE'??
             //TODO: Could check here for XX-XX-XX XXXXXXXX in the CSV and not try and send that data....
             //TODO: Actually do something with the XML that is returned!
+
+            console.log("Do Smart Debit?");
+            console.log( "51 DD-Consent : " + new_check_in[_csv['51 DD-Consent']] );
+
             if(new_check_in[_csv['51 DD-Consent']] == 'TRUE' || new_check_in[_csv['51 DD-Consent']] == 'true'){
                 ProcessSmartDebit( new_check_in, _data_in, (err, _smart_debit)=>{
                     if(err){
