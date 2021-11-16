@@ -826,7 +826,7 @@ function ProcessSmartDebit(_customer_in, _data_in, callback){
                 // console.log(res);
                 // console.log("res end");
 
-                console.log(res.body)
+                //console.log(res.body)
 
                 if (err) {
                     console.log("Err");
@@ -919,7 +919,7 @@ function ProcessSmartDebit(_customer_in, _data_in, callback){
                         if(err){
                             a_callback(err);
                         }else{
-                            console.dir(result);
+                            //console.dir(result);
                             if(result.variable_ddi){
                                 //console.dir(result.successful.success[2]);
                                 // a_callback(null, result);
