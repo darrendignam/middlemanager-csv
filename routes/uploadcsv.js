@@ -426,13 +426,14 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
         },
         (_data_in,async_callback)=>{
             //(4) try and push this to a new order
-
+            console.log("Function: CreateCheckIn");
             CreateCheckIn(new_check_in, _data_in, _site, (err, _contract)=>{
                 if(err){
                     console.log("Err: CreateCheckIn");
                     async_callback(err);
                 }else{
                     _data_in["contract"] = _contract; //add the result to the results object we have been building.
+                    console.log(JSON.stringify( _data_in ))
                     async_callback(null, _data_in); //pass the result to the final handler (below)
                 }
             });
@@ -444,7 +445,7 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
             //TODO: Actually do something with the XML that is returned!
 
             console.log("Do Smart Debit?");
-            console.log( "51 DD-Consent : " + new_check_in[_csv['51 DD-Consent']] );
+            console.log("51 DD-Consent : " + new_check_in[_csv['51 DD-Consent']] );
 
             if(new_check_in[_csv['51 DD-Consent']] == 'TRUE' || new_check_in[_csv['51 DD-Consent']] == 'true'){
                 ProcessSmartDebit( new_check_in, _data_in, (err, _smart_debit)=>{
