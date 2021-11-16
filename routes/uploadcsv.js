@@ -846,7 +846,7 @@ function ProcessSmartDebit(_customer_in, _data_in, callback){
                         if(err){
                             a_callback(err);
                         }else{
-                            console.dir(result);
+                            //console.dir(result);
                             if(result.successful){
                                 //console.dir(result.successful.success[2]);
                                 a_callback(null, result);
