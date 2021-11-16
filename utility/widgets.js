@@ -84,6 +84,7 @@ module.exports = {
      * 
      * At least 5 days away. and then either 14 or 28
      */
+    //TODO: Can produce a date in the past, which upsets the smartdebit code. Perhaps check if this generated date fails the 5 days in the future thing...
      smartDebit_formatMonthTodayYYYYMMDD: (in_date) => {
         var d = new Date(in_date),
             month = '' + (d.getMonth() + 1),
