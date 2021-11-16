@@ -451,6 +451,7 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
                 ProcessSmartDebit( new_check_in, _data_in, (err, _smart_debit)=>{
                     if(err){
                         console.log( err );
+                        _data_in['bankaccount'] = JSON.stringify( err );
                     }else{
                         if( _smart_debit && _smart_debit.length>0 && _smart_debit[0] && _smart_debit[0].custpayid ){
                             _data_in['bankaccount'] = _smart_debit[0].custpayid ;
@@ -835,6 +836,7 @@ function ProcessSmartDebit(_customer_in, _data_in, callback){
                         "error": "Not Found SD Validate",
                         "type": "404",
                         "number": 404,
+                        "body":res.body,
                     });
                 } else if (res.body.error) {
                     a_callback(res.body);
@@ -906,11 +908,11 @@ function ProcessSmartDebit(_customer_in, _data_in, callback){
                         "error": "Not Found SD Create",
                         "type": "404",
                         "number": 404,
+                        "body":res.body,
                     });
                 } else if (res.body.error) {
                     a_callback(res.body);
-                }
-                else {
+                } else { //win!?
                     console.log(res.body);
                     //If we are here the validate was OK, so now assuming everything works, we can add the bank account
                     parseXML(res.body, function (err, result) {
