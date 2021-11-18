@@ -173,35 +173,35 @@ router.post('/', upload.single('csvfile'), function (req, res) {
                                 for(let i=0;i<finalResult.length;i++){
                                     // result_table.push( JSON.stringify(finalResult[i]) );
                                     let _row = {
-                                        "booking-id": finalResult[i].bookingid,
-                                        "customer-name": finalResult[i].name,
-                                        "customer-email": finalResult[i].email,
-                                        "customer-id": finalResult[i].customer.custid,
+                                        "booking-id": finalResult[i]?.bookingid,
+                                        "customer-name": finalResult[i]?.name,
+                                        "customer-email": finalResult[i]?.email,
+                                        "customer-id": finalResult[i]?.customer?.custid,
                                         
-                                        "unit-UnitID": finalResult[i].unit.UnitID,
-                                        "unit-UnitNumber": finalResult[i].unit.UnitNumber,
-                                        "unit-SizeCodeID": finalResult[i].unit.SizeCodeID,
-                                        "unit-Sizecode": finalResult[i].unit.Sizecode,
-                                        "unit-Description": finalResult[i].unit.Description,
-                                        "unit-Weekrate": finalResult[i].unit.Weekrate,
-                                        "unit-MonthRate": finalResult[i].unit.MonthRate,
-                                        "unit-PhysicalSize": finalResult[i].unit.PhysicalSize,
-                                        "unit-Height": finalResult[i].unit.Height,
-                                        "unit-Width": finalResult[i].unit.Width,
-                                        "unit-Depth": finalResult[i].unit.Depth,
-                                        "unit-ledgeritemid": finalResult[i].unit.ledgeritemid,
-                                        "unit-VatCode": finalResult[i].unit.VatCode,
-                                        "unit-VATRate": finalResult[i].unit.VATRate,
+                                        "unit-UnitID": finalResult[i]?.unit?.UnitID,
+                                        "unit-UnitNumber": finalResult[i]?.unit?.UnitNumber,
+                                        "unit-SizeCodeID": finalResult[i]?.unit?.SizeCodeID,
+                                        "unit-Sizecode": finalResult[i]?.unit?.Sizecode,
+                                        "unit-Description": finalResult[i]?.unit?.Description,
+                                        "unit-Weekrate": finalResult[i]?.unit?.Weekrate,
+                                        "unit-MonthRate": finalResult[i]?.unit?.MonthRate,
+                                        "unit-PhysicalSize": finalResult[i]?.unit?.PhysicalSize,
+                                        "unit-Height": finalResult[i]?.unit?.Height,
+                                        "unit-Width": finalResult[i]?.unit?.Width,
+                                        "unit-Depth": finalResult[i]?.unit?.Depth,
+                                        "unit-ledgeritemid": finalResult[i]?.unit?.ledgeritemid,
+                                        "unit-VatCode": finalResult[i]?.unit?.VatCode,
+                                        "unit-VATRate": finalResult[i]?.unit?.VATRate,
 
-                                        "reservation-CustomerID": finalResult[i].reservation.CustomerID,
-                                        "reservation-ReservationID": finalResult[i].reservation.ReservationID,
-                                        "reservation-InvoiceID": finalResult[i].reservation.InvoiceID,
-                                        "reservation-PaymentID": finalResult[i].reservation.PaymentID,
+                                        "reservation-CustomerID": finalResult[i]?.reservation?.CustomerID,
+                                        "reservation-ReservationID": finalResult[i]?.reservation?.ReservationID,
+                                        "reservation-InvoiceID": finalResult[i]?.reservation?.InvoiceID,
+                                        "reservation-PaymentID": finalResult[i]?.reservation?.PaymentID,
 
-                                        "photoid": finalResult[i].photoid,
-                                        "bankaccountID" : finalResult[i].bankaccount,
-                                        "contract":finalResult[i].contract,
-                                        "orderid":finalResult[i].orderid,
+                                        "photoid": finalResult[i]?.photoid,
+                                        "bankaccountID" : finalResult[i]?.bankaccount,
+                                        "contract":finalResult[i]?.contract,
+                                        "orderid":finalResult[i]?.orderid,
                                     }
 
                                     result_table.push(_row);
@@ -341,8 +341,8 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
                             iDescription:'Photo ID Document',
                             iFileType:new_check_in[_csv['40 Photo-ID-Document']].split('.').pop()
                         };
-                        console.log( img_obj.iFileType );
-                        console.log( result.content_type );
+                        console.log( `FileType: ${img_obj.iFileType}`);
+                        console.log( `ContentType: ${result.content_type}` );
 
                         mm.InsertOLEDocumentBase64(img_obj,(err, response)=>{
                             if(err){
@@ -352,8 +352,12 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
                                 _data_in["err"] = "oled404" ;
                                 async_callback(null, _data_in);
                             }else{
-                                // _data_in["photoid"] = JSON.stringify(response); //weird object returned that messes up the parser. The literal string is: [{"'SUCCESS'":"SUCCESS"}]
-                                _data_in["photoid"] = "SUCCESS";
+                                console.log('InsertOLED Response:')
+                                console.log(JSON.stringify(response.body) );
+                                // TODO: Check for status 200                              
+                                // _data_in["photoid"] = "SUCCESS";
+                                _data_in["photoid"] = JSON.stringify(response.body);
+
                                 async_callback(null, _data_in);
                             }
                         });
@@ -373,12 +377,12 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
                     async_callback(err);
                 }else{
                     //console.log(unit);
-                    _data_in["unit"] = unit; //not an array is this is a wrapper mm function that post processes the array internally
+                    _data_in["unit"] = unit; 
                     if( _data_in.unit ){
                         //console.log(_data_in.unit);
                         async_callback(null, _data_in);
                     }else{
-                        async_callback({"Error":"No Units found. The SIZECODE attached to this quote/order have all be rented out, but we have more under a different SIZECODE. Please call our office and we can find a comparable unit"});
+                        async_callback({"Error":"No Units found.", "Message":"The SIZECODE attached to this quote/order have all be rented out, but we have more under a different SIZECODE. Please call our office and we can find a comparable unit"});
                     }
                 }
             });
@@ -472,7 +476,17 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
         if(err){
             //if you see something like// [{"'1'":"1"}]  //then it was the reservation that errored
             console.log("Err: New Checkin: "+ JSON.stringify(err));
-            callback(err);
+            // callback(err);
+
+            let final_result = {};
+
+            final_result["bookingid"] = new_check_in[_csv['1 Booking-ID']];
+            final_result["orderid"] = err.Error;
+            final_result["name"] = '';
+            final_result["email"] = '';
+
+            callback(null, final_result);
+
         }else{
             console.log(final_result);
 
@@ -485,7 +499,18 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
 
 
             if(final_result.contract == 'Invalid: SQLState: 00000SQLCode: 0'){
-                callback({"error" : "SpaceManager failed to create contract", "message" : final_result});
+                //callback({"error" : "SpaceManager failed to create contract", "message" : final_result});
+
+                console.log({"error" : {"error" : "SpaceManager failed to create contract", "message" : final_result}} );
+                // callback({"error" : "SpaceManager returned an empty ID. Or malformed order string or otherwise failed", "message" : final_result});
+
+                final_result["bookingid"] = new_check_in[_csv['1 Booking-ID']];
+                final_result["orderid"] = "SpaceManager failed to create contract. Manually check and complete order.";
+                final_result["name"] = '';
+                final_result["email"] = '';
+
+                callback(null, final_result);
+
             }else{
                 let result_regex = /(SQLState: 00000SQLCode: 0ContractID:)\s([A-Z0-9]{1,20})/g;
                 //let orderid = result_regex.exec(final_result.contract)[2];
@@ -513,7 +538,17 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
                     callback(null, final_result);
           
                 }else{
-                    callback({"error" : "SpaceManager returned an empty ID. Or malformed order string or otherwise failed", "message" : final_result});
+                    //console.log("Ultimate Error Happenned, we should never see this");
+                    console.log({"error" : "SpaceManager returned an empty ID. Or malformed order string or otherwise failed", "message" : final_result})
+                    // callback({"error" : "SpaceManager returned an empty ID. Or malformed order string or otherwise failed", "message" : final_result});
+
+                    final_result["bookingid"] = new_check_in[_csv['1 Booking-ID']];
+                    final_result["orderid"] = "SpaceManager returned an empty ID. Or malformed order string or otherwise failed. Manually check and complete order.";
+                    final_result["name"] = '';
+                    final_result["email"] = '';
+
+                    callback(null, final_result);
+
                 }
             }
 
@@ -590,7 +625,7 @@ function CreateCustomer(_data_in, _siteData, _contactData, callback){
                     "icustomerid": _customer[0].custid, 
                     "itypeid" : mmLookup.returnContactId('Email', _contactData),
                     "inumber": _data_in[_csv['11 Email']],
-                    "iprimary": 1,
+                    "iprimary": 3,
                 },(err, _newContact)=>{
                     console.log("[][][][][][] NEW EMAIL [][][][][]");
                     console.log(err);
@@ -600,6 +635,13 @@ function CreateCustomer(_data_in, _siteData, _contactData, callback){
                     callback(null, _customer);
                 }
             );
+            //Need to run WSetQuestAnswer
+            //tlocation = 'C1'
+            //tid = 'PDF'
+            //tchoiceid = 'YES'
+            //parentid = custid
+            //tvalue = 1
+
         },
         //add authorised persons
         function(_customer, callback){
@@ -607,6 +649,8 @@ function CreateCustomer(_data_in, _siteData, _contactData, callback){
 
             if(_data_in[_csv['42 Authorised-Persons']] != ''){ //Authorised Persons field
                 let AuthPerson = JSON.parse(_data_in[_csv['42 Authorised-Persons']]);
+                console.log( "AuthPerson:" );
+                console.log( AuthPerson );
                 //[{"title":"Miss","firstName":"Alex","surname":"Smith","emailAddress":"alexsmith@gmail.com","addressLineOne":"10 Roseville Road","addressLineTwo":"","addressLineThree":"","city":"Leeds","postCode":"LS12 4HP","carRegistration":"","mobile":"01134269111","notified":"1","isPrimaryContact":"1","isAuthorisedForAccess":"1","isAuthorisedForAccount":"1"}]
                 mm.post_request("/api/v1/base/WAddPerson",
                     {
@@ -665,8 +709,12 @@ function CreateCheckIn(_new_check_in, _data_in, _siteID, callback){
     let _insureid = 'I1';
     let _goodsvalue = parseInt(_new_check_in[_csv['43 Insurance-Amount']]);
 
-    //Checking for the fields that determine if the custoemr wants insurence?
-    if(_new_check_in[_csv['45 Insurance-Declined']]== 'FALSE' && _new_check_in[_csv['47 Insurance-Type']] == 'accepted'){
+    //Checking for the fields that determine if the customer wants insurance?
+    //if(_new_check_in[_csv['45 Insurance-Declined']]== 'FALSE' && _new_check_in[_csv['47 Insurance-Type']] == 'accepted'){
+
+    console.log(`Insurance-Declined: '${ _new_check_in[_csv['45 Insurance-Declined']] }'  Insurance-Type: '${ _new_check_in[_csv['47 Insurance-Type']] }'`)
+
+    if(1==1){
         _insure = 'TRUE';
         // This is some business logic based onthe bands of insurance used - needed a new WFunction on the server side. Plus the ledgeritems witrh these names need to exist...
         switch(_goodsvalue){

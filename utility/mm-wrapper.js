@@ -344,7 +344,7 @@ module.exports = {
     InsertOLEDocumentBase64: function (post_data, callback) {
         console.log(`InsertOLEDocumentBase64: ${post_data.iFileType}`);
         // this.post_request("/api/v1/base/WInsertOLEDocumentBase64", post_data, callback);
-        needle("post", `${server_url}$/api/v1/base/WInsertOLEDocumentBase64`, post_data, function (err, res) {
+        needle("post", `${server_url}/api/v1/base/WInsertOLEDocumentBase64`, post_data, function (err, res) {
             //console.log(`InsertOLEDocumentBase64 ERR : ${err} RES : ${res}`);
             callback(err, res);
         });
