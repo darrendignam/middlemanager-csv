@@ -487,9 +487,7 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
         },
         (_data_in, async_callback)=>{
             //(5) Smart Debit stuff.....
-            //Does the CSV row have 'DD Consent'=='TRUE'??
             //TODO: Could check here for XX-XX-XX XXXXXXXX in the CSV and not try and send that data....
-            //TODO: Actually do something with the XML that is returned!
 
             console.log("Do Smart Debit?");
             console.log("51 DD-Consent : " + new_check_in[_csv['51 DD-Consent']] );
@@ -678,14 +676,32 @@ function CreateCustomer(_data_in, _siteData, _contactData, callback){
                     callback(null, _customer);
                 }
             );
-            //Need to run WSetQuestAnswer
+        },
+        //add Email Answer
+        function(_customer, callback){
+            //if the above is correct - do a phonme number import:
+            mm.post_request("/api/v1/base/WSetQuestAnswer",
+                {
+                    "tlocation": "C1", 
+                    "tid":"PDF",
+                    "parentid": _customer[0].custid, 
+                    "tvalue":1
+                },(err, _newQuest)=>{
+                    console.log("[][][][][][] NEW EMAIL ANSWER [][][][][]");
+                    console.log(err);
+                    console.log(_newQuest);
+                    //console.log( _customer[0].custid );
+
+                    callback(null, _customer);
+                }
+            );
+            //Need to run WSetQuestAnswer : Was told to use these values. Customer specfic
             //tlocation = 'C1'
             //tid = 'PDF'
             //tchoiceid = 'YES'
             //parentid = custid
             //tvalue = 1
-
-        },
+        },        
         //add authorised persons
         function(_customer, callback){
             //if the fiels is not empty:
