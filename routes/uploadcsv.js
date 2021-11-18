@@ -655,20 +655,20 @@ function CreateCustomer(_data_in, _siteData, _contactData, callback){
                 mm.post_request("/api/v1/base/WAddPerson",
                     {
                         "icustomerid": _customer[0]?.custid, 
-                        "isurname": AuthPerson?.surname,                    // *isurname               char(50)
-                        "iforenames": AuthPerson?.firstname,                    // iforenames              char(50)
-                        "ititle": AuthPerson?.title,                    // ititle                  char(50)
-                        "Add1": AuthPerson?.addressLineOne,                    // Add1                    char(50)
-                        "Add2": AuthPerson?.addressLineTwo,                    // Add2                    char(50)
-                        "Add3": AuthPerson?.addressLineThree,                    // Add3                    char(50)
-                        "iTown": AuthPerson?.city,                    // iTown                   char(50)
+                        "isurname": AuthPerson[0]?.surname,                    // *isurname               char(50)
+                        "iforenames": AuthPerson[0]?.firstname,                    // iforenames              char(50)
+                        "ititle": AuthPerson[0]?.title,                    // ititle                  char(50)
+                        "Add1": AuthPerson[0]?.addressLineOne,                    // Add1                    char(50)
+                        "Add2": AuthPerson[0]?.addressLineTwo,                    // Add2                    char(50)
+                        "Add3": AuthPerson[0]?.addressLineThree,                    // Add3                    char(50)
+                        "iTown": AuthPerson[0]?.city,                    // iTown                   char(50)
                         "iCounty":"",                    // iCounty                 char(50)
-                        "iPostcode":AuthPerson?.postCode,                    // iPostcode               char(20)
+                        "iPostcode":AuthPerson[0]?.postCode,                    // iPostcode               char(20)
                         "iCountry":"",                    // iCountry                char(3)
                         "iJobTitle":"",                    // iJobTitle               char(50)
-                        "iPrimaryContact":AuthPerson?.isPrimaryContact,                    // iPrimaryContact         integer
-                        "iAuthorised":AuthPerson?.isAuthorisedForAccess,                    // iAuthorised             integer
-                        "iAuthorisedForAccount":AuthPerson?.isAuthorisedForAccount,                    // iAuthorisedForAccount   integer
+                        "iPrimaryContact":AuthPerson[0]?.isPrimaryContact,                    // iPrimaryContact         integer
+                        "iAuthorised":AuthPerson[0]?.isAuthorisedForAccess,                    // iAuthorised             integer
+                        "iAuthorisedForAccount":AuthPerson[0]?.isAuthorisedForAccount,                    // iAuthorisedForAccount   integer
                         "idoreturn":1,                    // idoreturn               integer
                     },(err, _newPerson)=>{
                         console.log("[][][][][][] ADD PERSON [][][][][]");
