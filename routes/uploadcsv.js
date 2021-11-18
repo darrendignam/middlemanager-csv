@@ -323,7 +323,24 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
                 }
             });
         },
-
+        (_data_in,async_callback)=>{
+            //(2) Get UnitID. Making a reservation will assign us a UnitID
+            mm.getAvaliableUnit(_site, _size, (err,unit)=>{ //TODO: Use the new Utility Here to get the ID for the sizecode
+                if(err){
+                    console.log("Err: getAvaliableUnit");
+                    async_callback(err);
+                }else{
+                    //console.log(unit);
+                    _data_in["unit"] = unit; 
+                    if( _data_in.unit ){
+                        //console.log(_data_in.unit);
+                        async_callback(null, _data_in);
+                    }else{
+                        async_callback({"Error":"No Units found. Manually Process this one. Look for the customer in the System", "Message":"The SIZECODE attached to this quote/order have all be rented out, but we have more under a different SIZECODE. Please call our office and we can find a comparable unit"});
+                    }
+                }
+            });
+        },
         (_data_in,async_callback)=>{
             //(1a) upload image 1
             if(new_check_in[40]!=''){
@@ -367,25 +384,6 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
                 _data_in["photoid"] = "none supplied";
                 async_callback(null, _data_in);
             }
-        },
-
-        (_data_in,async_callback)=>{
-            //(2) Get UnitID. Making a reservation will assign us a UnitID
-            mm.getAvaliableUnit(_site, _size, (err,unit)=>{ //TODO: Use the new Utility Here to get the ID for the sizecode
-                if(err){
-                    console.log("Err: getAvaliableUnit");
-                    async_callback(err);
-                }else{
-                    //console.log(unit);
-                    _data_in["unit"] = unit; 
-                    if( _data_in.unit ){
-                        //console.log(_data_in.unit);
-                        async_callback(null, _data_in);
-                    }else{
-                        async_callback({"Error":"No Units found.", "Message":"The SIZECODE attached to this quote/order have all be rented out, but we have more under a different SIZECODE. Please call our office and we can find a comparable unit"});
-                    }
-                }
-            });
         },
 
         (_data_in,async_callback)=>{          
@@ -482,8 +480,8 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
 
             final_result["bookingid"] = new_check_in[_csv['1 Booking-ID']];
             final_result["orderid"] = err.Error;
-            final_result["name"] = '';
-            final_result["email"] = '';
+            final_result["name"] = _customer_name;
+            final_result["email"] = _customer_email;
 
             callback(null, final_result);
 
@@ -506,8 +504,8 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
 
                 final_result["bookingid"] = new_check_in[_csv['1 Booking-ID']];
                 final_result["orderid"] = "SpaceManager failed to create contract. Manually check and complete order.";
-                final_result["name"] = '';
-                final_result["email"] = '';
+                final_result["name"] = _customer_name;
+                final_result["email"] = _customer_email;
 
                 callback(null, final_result);
 
@@ -544,8 +542,8 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
 
                     final_result["bookingid"] = new_check_in[_csv['1 Booking-ID']];
                     final_result["orderid"] = "SpaceManager returned an empty ID. Or malformed order string or otherwise failed. Manually check and complete order.";
-                    final_result["name"] = '';
-                    final_result["email"] = '';
+                    final_result["name"] = _customer_name;
+                    final_result["email"] = _customer_email;
 
                     callback(null, final_result);
 
@@ -710,11 +708,9 @@ function CreateCheckIn(_new_check_in, _data_in, _siteID, callback){
     let _goodsvalue = parseInt(_new_check_in[_csv['43 Insurance-Amount']]);
 
     //Checking for the fields that determine if the customer wants insurance?
-    //if(_new_check_in[_csv['45 Insurance-Declined']]== 'FALSE' && _new_check_in[_csv['47 Insurance-Type']] == 'accepted'){
-
-    console.log(`Insurance-Declined: '${ _new_check_in[_csv['45 Insurance-Declined']] }'  Insurance-Type: '${ _new_check_in[_csv['47 Insurance-Type']] }'`)
-
-    if(1==1){
+    console.log(`Insurance-Declined: '${ _new_check_in[_csv['45 Insurance-Declined']] }'  Insurance-Type: '${ _new_check_in[_csv['47 Insurance-Type']] }'`);
+    if(   (_new_check_in[_csv['45 Insurance-Declined']]== 'FALSE' || _new_check_in[_csv['45 Insurance-Declined']]== 'false' )  &&  (_new_check_in[_csv['47 Insurance-Type']] == 'ACCEPTED' || _new_check_in[_csv['47 Insurance-Type']] == 'accepted')   ){
+    // if(1==1){
         _insure = 'TRUE';
         // This is some business logic based onthe bands of insurance used - needed a new WFunction on the server side. Plus the ledgeritems witrh these names need to exist...
         switch(_goodsvalue){
