@@ -199,6 +199,7 @@ router.post('/', upload.single('csvfile'), function (req, res) {
                                         "reservation-PaymentID": finalResult[i]?.reservation?.PaymentID,
 
                                         "photoid": finalResult[i]?.photoid,
+                                        "photoaddress": finalResult[i]?.photoaddress,
                                         "bankaccountID" : finalResult[i]?.bankaccount,
                                         "contract":finalResult[i]?.contract,
                                         "orderid":finalResult[i]?.orderid,
@@ -281,6 +282,7 @@ function NewReservation( new_reservation, _siteData, _contactData, callback ){
             final_result["unit"]     = {UnitID:'',UnitNumber:'',UnitNumber:'',SizeCodeID:'',Sizecode:'',Description:`InvoiceID: ${reservation[0].InvoiceID} PaymentID: ${reservation[0].PaymentID}`,Weekrate:'',MonthRate:'',PhysicalSize:'',Height:'',Width:'',Depth:'',ledgeritemid:'',VatCode:'', VATRate:'', };
 
             final_result["photoid"] = '';
+            final_result["photoaddress"] = '';
             final_result["bankaccountID"] = '',
             final_result["contract"] = '';
             final_result["orderid"] = '';
@@ -343,7 +345,7 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
         },
         (_data_in,async_callback)=>{
             //(1a) upload image 1
-            if(new_check_in[40]!=''){
+            if(new_check_in[_csv['40 Photo-ID-Document']]!=''){
                 console.log(`Image URL: ${new_check_in[_csv['40 Photo-ID-Document']]}`);
 
                 mm.encodeBase64_URI(new_check_in[_csv['40 Photo-ID-Document']], (err, result)=>{
@@ -385,6 +387,49 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
                 async_callback(null, _data_in);
             }
         },
+        (_data_in,async_callback)=>{
+            //(1a) upload image 1
+            if(new_check_in[_csv['41 Address-ID-Document']]!=''){
+                console.log(`Image URL: ${new_check_in[_csv['41 Address-ID-Document']]}`);
+
+                mm.encodeBase64_URI(new_check_in[_csv['41 Address-ID-Document']], (err, result)=>{
+                    if(err){
+                        console.log("Err: encodeBase64 Address ID");
+                        _data_in["photoaddress"] = JSON.stringify(err);
+                        async_callback(_data_in);
+                    }else{
+                        let img_obj = {
+                            iCustId: _data_in.customer.custid,
+                            iBlob: result.raw, //raw gives success but still no image appearing in the DB
+                            iDescription:'Address ID Document',
+                            iFileType:new_check_in[_csv['41 Address-ID-Document']].split('.').pop()
+                        };
+                        console.log( `FileType: ${img_obj.iFileType}`);
+                        console.log( `ContentType: ${result.content_type}` );
+
+                        mm.InsertOLEDocumentBase64(img_obj,(err, response)=>{
+                            if(err){
+                                console.log(`Err: InsertOLED Address : ${ JSON.stringify(err) }`);
+                                _data_in["photoaddress"] = "ERROR";
+                                _data_in["err"] = "oled404" ;
+                                async_callback(null, _data_in);
+                            }else{
+                                console.log('InsertOLED Response:')
+                                console.log(JSON.stringify(response.body) );
+                                // TODO: Check for status 200                              
+                                // _data_in["photoid"] = "SUCCESS";
+                                _data_in["photoaddress"] = JSON.stringify(response.body);
+
+                                async_callback(null, _data_in);
+                            }
+                        });
+                    }
+                });
+            }else{
+                _data_in["photoaddress"] = "none supplied";
+                async_callback(null, _data_in);
+            }
+        },        
 
         (_data_in,async_callback)=>{          
             //(3) Make reservation from Customer and Unit
