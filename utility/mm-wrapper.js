@@ -21,6 +21,9 @@ var needle_options = {
  * @param {callback} callback_function - error and response
  */
 let post_wrapper = function (api_function, post_data, callback) {
+    //insert the SecureToken
+    post_data['securetoken'] = process.env.MIDDLEMANAGER_TOKEN;
+
     needle.post(`${server_url}${api_function}`, post_data, needle_options, function (err, res) {
         if (err) {
             callback(err);
