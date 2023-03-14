@@ -29,9 +29,7 @@ let post_wrapper = function (api_function, post_data, callback) {
             callback(err);
         } else if (res.statusCode != 200) {
             callback({
-                "error": "Not Found",
-                "type": "404",
-                "number": 404,
+                "error": res
             });
         } else if (res.body.error) {
             callback(res.body);
