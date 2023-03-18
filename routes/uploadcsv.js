@@ -30,12 +30,12 @@ let _csv  = require('../utility/csv-col-names');
 var request = require('request');
 
 
-router.get('/', function (req, res) {
+router.get('/', (req, res)=>{
     res.render("data/uploadcsv");
 });
 
 // req.file will contain the uploaded file information. 
-router.post('/', upload.single('csvfile'), function (req, res) {
+router.post('/', upload.single('csvfile'), (req, res)=>{
     // open uploaded file
     const fileRows = [];
     const validRows = [];
@@ -140,7 +140,7 @@ router.post('/', upload.single('csvfile'), function (req, res) {
 function ProcessRows(incoming_rows, rows_complete){
     // Get the IDs from the SM database so we dont have to have them hard coded everywhere!!
     async([  
-        function(callback){
+        (callback)=>{
             mmLookup.getSiteData((err, siteData)=>{
                 if(err){
                     callback(err);
@@ -149,7 +149,7 @@ function ProcessRows(incoming_rows, rows_complete){
                 }
             });
         },
-        function(_incomingSiteData, callback){
+        (_incomingSiteData, callback)=>{
             mmLookup.getContactData((err, contactdata)=>{
                 if(err){
                     callback(err);
@@ -158,7 +158,7 @@ function ProcessRows(incoming_rows, rows_complete){
                 }
             });
         },
-    ], function(err, spacemanagerIDs){
+    ], (err, spacemanagerIDs)=>{
         if (err) {
             res.json(err);
         } else {
@@ -175,9 +175,9 @@ function ProcessRows(incoming_rows, rows_complete){
             //process all the valid rows....
             
             //process the discovered rows of the CSV through the reservation W function
-            async([function initializer(initArray) {
+            async([function initialiser(initArray) {
                 initArray(null, []); //prep an empty array for us to work with (in resultsArray)
-            }].concat(incoming_rows.map(function (current_csv_row) {
+            }].concat(incoming_rows.map( (current_csv_row)=>{
                 return function (resultsArray, nextCallback) {
                                                         //loop over the valid array items and try and push them into SM
                                                         // Booking ID,	Reservation Transaction ID,	Reservation Amount Paid,	Container Size,	Container ID,	Duration,	First Name,	Surname,	Email,	Telephone,	Weekly Price,	Offer Price,	Offer Duration,	Moving In Date,	Billing Title,	Billing First Name,	Billing Surname,	Billing Email Address,	Billing Company Name,	Billing Address Line One,	Billing Address Line Two,	Billing Address Line Three,	Billing City,	Billing PostCode,	Correspondance Title,	Correspondance First Name,	Correspondance Surname,	Correspondance Email Address,	Correspondance Company Name,	Correspondance Address Line One,	Correspondance Address Line Two,	Correspondance Address Line Three,	Correspondance City,	Correspondance PostCode,	Car Registration,	Mobile,	SMS Consent,	Photo ID Document,	Address ID Document,	Authorised Persons,	Insurance Amount,	Insurance Price,	Insurance Declined,	Insurance Proof Document,	Insurance Type,	DD Name,	DD Sort Code,	DD Account Number,	DD Consent,	DD Declined,	eSignDocumentId,	Optional Extras,	Upfront Payment Amount,	Upfront Transaction ID,	Upfront Transaction Date,
@@ -231,9 +231,9 @@ function ProcessRows(incoming_rows, rows_complete){
                         });
                     }
                 }
-            })), 
-            rows_complete(err, finalResult)
-            );
+            })),(err, finalResult)=>{ //When the async array of functions either completes with a 'finalResult' or any of the steps produces an error this code executes
+                rows_complete(err, finalResult)
+            });
         }
     });
 }
@@ -763,7 +763,7 @@ function CreateCustomer(_data_in, _siteData, _contactData, callback){
 
     ], function(err, data){
 
-        //for now send back the old style customer array, but will refactor this to be the new object of customer and contacts.
+        //for now send back the old style customer array, but could refactor this to be the new object of customer and contacts.
         callback(err, data);
     });
 }
@@ -939,7 +939,7 @@ function ProcessSmartDebit(_customer_in, _data_in, callback){
                 formData: payload
             };
 
-            request(options, function (err, res) {
+            request(options, (err, res)=>{
                 // if (error) throw new Error(error);
                 // console.log(response.body);
                 console.log(`${server_url}${api_validate}`);
@@ -965,7 +965,7 @@ function ProcessSmartDebit(_customer_in, _data_in, callback){
                     a_callback(res.body);
                 } else {//success?
                     console.log(res.body);
-                    parseXML(res.body, function (err, result) {
+                    parseXML(res.body, (err, result)=>{
                         if(err){
                             a_callback(err);
                         }else{
@@ -994,8 +994,7 @@ function ProcessSmartDebit(_customer_in, _data_in, callback){
         //     }
         //   }
 
-        },
-       
+        },     
         //authorise the DD and create it
         function(_sm_debit, a_callback){
             console.log("SD Create");
@@ -1014,7 +1013,7 @@ function ProcessSmartDebit(_customer_in, _data_in, callback){
                 formData: payload
             };
 
-            request(options, function (err, res) {
+            request(options, (err, res)=>{
                 // if (error) throw new Error(error);
                 // console.log(response.body);
                 console.log(`${server_url}${api_create}`);
@@ -1038,7 +1037,7 @@ function ProcessSmartDebit(_customer_in, _data_in, callback){
                 } else { //win!?
                     console.log(res.body);
                     //If we are here the validate was OK, so now assuming everything works, we can add the bank account
-                    parseXML(res.body, function (err, result) {
+                    parseXML(res.body, (err, result)=>{
                         if(err){
                             a_callback(err);
                         }else{
