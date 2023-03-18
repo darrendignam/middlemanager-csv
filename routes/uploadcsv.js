@@ -657,7 +657,7 @@ function CreateCustomer(_data_in, _siteData, _contactData, callback){
         },
         //add mobile phone
         function(_customer, callback){
-            //if the above is correct - do a phonme number import:
+            //if the above is correct - do a phone number import:
             mm.post_request("/api/v1/base/WManageContact",
                 {
                     "icustomerid": _customer[0].custid, 
@@ -678,7 +678,7 @@ function CreateCustomer(_data_in, _siteData, _contactData, callback){
         },
         //add Email
         function(_customer, callback){
-            //if the above is correct - do a phonme number import:
+            //if the above is correct - do an email address number import:
             mm.post_request("/api/v1/base/WManageContact",
                 {
                     "icustomerid": _customer[0].custid, 
@@ -697,7 +697,6 @@ function CreateCustomer(_data_in, _siteData, _contactData, callback){
         },
         //add Email Answer
         function(_customer, callback){
-            //if the above is correct - do a phonme number import:
             mm.post_request("/api/v1/base/WSetQuestAnswer",
                 {
                     "tlocation": "C1", 
