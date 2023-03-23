@@ -85,7 +85,7 @@ module.exports = {
      * This function returns either a "NONE" string, or the SpaceManager database ID of the contact type you want.
      * It will search through the array of contact types looking for the ID.
      * 
-     * @param {String} _description - The text name of the unit size code you would like the ID for
+     * @param {String} _description - The text of the contact type you would like the ID for
      * @param {Array} _array - An array of contact types to search through (Build this array by calling getContactData in this module.)
      */
     returnContactId: (_description, _array) => {
