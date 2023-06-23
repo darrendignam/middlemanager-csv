@@ -167,7 +167,7 @@ function ProcessRows(incoming_rows, rows_complete){
             g_siteData = spacemanagerIDs[1];
             
             console.log( g_contactData );
-            console.log( "Contact.Email: " + mmLookup.returnContactId('Email', g_contactData) );
+            console.log( "ProcessRows : Contact.Email: " + mmLookup.returnContactId('Email', g_contactData) );
             
             console.log( g_siteData[0].name );
             
@@ -201,7 +201,7 @@ function ProcessRows(incoming_rows, rows_complete){
                         //console.log(`${i} : ${s}`);
                     }
 
-                    console.log(`Customer: ${current_csv_row[ _csv['1 Booking-ID'] ]}: "${current_csv_row[ _csv['9 First-Name'] ]} ${current_csv_row[ _csv['10 Surname'] ]}"`)
+                    console.log(`Process Row : Customer: ${current_csv_row[ _csv['1 Booking-ID'] ]}: "${current_csv_row[ _csv['9 First-Name'] ]} ${current_csv_row[ _csv['10 Surname'] ]}"`)
 
                     //TODO: Perhaps use column 0 to do this now - as it has a field to say explicity what the  row represents
                     if(current_csv_row[ _csv['55 Upfront-Payment-Amount'] ] == ""){
@@ -254,7 +254,7 @@ function NewReservation( new_reservation, _siteData, _contactData, callback ){
 
     let _site = mmLookup.returnSiteId(new_reservation[ _csv['7 Location-Code'] ], _siteData);
     let _size = mmLookup.returnSizeCode(new_reservation[ _csv['6 Size-Code'] ], _siteData);
-    console.log(`LookupIDs: ${_site} : ${_size}`);
+    console.log(`NewReservation : LookupIDs: ${_site} : ${_size}`);
 
     let tmp_amount = _widgets.removeVAT( parseInt(new_reservation[ _csv['3 Reservation-Amount-Paid'] ]) ,0.2);
 
@@ -329,7 +329,7 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
     let _customer_name = `${new_check_in[_csv['9 First-Name']]} ${new_check_in[_csv['10 Surname']]}`;
     let _customer_email = new_check_in[_csv['11 Email']];
 
-    console.log(`LookupIDs: ${_site} : ${_size}`);
+    console.log(`NewCheckIn : LookupIDs: ${_site} : ${_size}`);
 
     async([
         (async_callback)=>{
@@ -368,7 +368,7 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
 
                 mm.encodeBase64_URI(new_check_in[_csv['40 Photo-ID-Document']], (err, result)=>{
                     if(err){
-                        console.log("Err: encodeBase64");
+                        console.log("Error: encodeBase64");
                         _data_in["photoid"] = JSON.stringify(err);
                         async_callback(_data_in);
                     }else{
@@ -408,11 +408,11 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
         (_data_in,async_callback)=>{
             //(1a) upload image 1
             if(new_check_in[_csv['41 Address-ID-Document']]!=''){
-                console.log(`Image URL: ${new_check_in[_csv['41 Address-ID-Document']]}`);
+                console.log(`Image 2 URL: ${new_check_in[_csv['41 Address-ID-Document']]}`);
 
                 mm.encodeBase64_URI(new_check_in[_csv['41 Address-ID-Document']], (err, result)=>{
                     if(err){
-                        console.log("Err: encodeBase64 Address ID");
+                        console.log("Error: 2 encodeBase64 Address ID");
                         _data_in["photoaddress"] = JSON.stringify(err);
                         async_callback(_data_in);
                     }else{
@@ -427,7 +427,7 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
 
                         mm.InsertOLEDocumentBase64(img_obj,(err, response)=>{
                             if(err){
-                                console.log(`Err: InsertOLED Address : ${ JSON.stringify(err) }`);
+                                console.log(`Err: 2 InsertOLED Address : ${ JSON.stringify(err) }`);
                                 _data_in["photoaddress"] = "ERROR";
                                 _data_in["err"] = "oled404" ;
                                 async_callback(null, _data_in);
@@ -467,17 +467,17 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
                 iComment:[new_check_in[_csv['0 Type']], new_check_in[_csv['1 Booking-ID']], new_check_in[_csv['2 Reservation-Transaction-ID']], new_check_in[_csv['4 Container-Size']], new_check_in[_csv['5 Container-ID']], new_check_in[_csv['53 eSignDocumentId']], new_check_in[_csv['56 Upfront-Transaction-ID']], new_check_in[_csv['57 Upfront-Transaction-Date']]].join(', '),
 
             }
-            console.log("ResObj:");
+            console.log("ReservationObj:");
             console.log(reservation_obj);
 
             mm.MakeReservation(reservation_obj, (err, res_response)=>{
-                console.log("ResResponse:");
+                console.log("ReservationResponse:");
                 console.log(err);
                 console.log(JSON.stringify( res_response ));
                 
                 res_obj = res_response[0];//always a single element array from the middelware driver
                 if(err){
-                    console.log("Err: MakeRes")
+                    console.log("Err: MakeReservation")
                     async_callback(err);
                 }else{
                     if(res_obj.CustomerID && res_obj.ReservationID && res_obj.InvoiceID && res_obj.PaymentID){
@@ -494,7 +494,7 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
             console.log("Function: CreateCheckIn");
             CreateCheckIn(new_check_in, _data_in, _site, (err, _contract)=>{
                 if(err){
-                    console.log("Err: CreateCheckIn");
+                    console.log("Error: CreateCheckIn");
                     async_callback(err);
                 }else{
                     _data_in["contract"] = _contract; //add the result to the results object we have been building.
@@ -513,6 +513,7 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
             if(new_check_in[_csv['51 DD-Consent']] == 'TRUE' || new_check_in[_csv['51 DD-Consent']] == 'true'){
                 ProcessSmartDebit( new_check_in, _data_in, (err, _smart_debit)=>{
                     if(err){
+                        console.log("Error: ProcessSmartDebit");
                         console.log( err );
                         _data_in['bankaccount'] = JSON.stringify( err );
                     }else{
@@ -534,7 +535,7 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
     ],(err,final_result)=>{
         if(err){
             //if you see something like// [{"'1'":"1"}]  //then it was the reservation that errored
-            console.log("Err: New Checkin: "+ JSON.stringify(err));
+            console.log("Err: New CheckIn: "+ JSON.stringify(err));
             // callback(err);
 
             let final_result = {};
@@ -628,7 +629,7 @@ function NewCheckIn( new_check_in, _siteData, _contactData, callback ){
  */
 function CreateCustomer(_data_in, _siteData, _contactData, callback){
     let _site = mmLookup.returnSiteId(_data_in[_csv['7 Location-Code']], _siteData);
-    console.log(`LookupIDs: ${_site}`);
+    console.log(`CreateCustomer : LookupIDs: ${_site}`);
 
     async([
         //step 1 create customer
@@ -777,7 +778,7 @@ function CreateCustomer(_data_in, _siteData, _contactData, callback){
  * @param {callback} callback - error and response
  */
 function CreateCheckIn(_new_check_in, _data_in, _siteID, callback){
-    console.log(`LookupIDs: ${_siteID}`);
+    console.log(`CreateCheckIn : LookupIDs: ${_siteID}`);
 
     let _monthRate = _widgets.convertWtoM( parseInt(_new_check_in[_csv['13 Weekly-Price']]) );
     let _tmp_amount = _widgets.removeVAT( parseInt(_new_check_in[_csv['3 Reservation-Amount-Paid']]), 0.2 );
@@ -915,7 +916,7 @@ function ProcessSmartDebit(_customer_in, _data_in, callback){
     async([
         //step 1 validate customer DD
         function(a_callback) {
-            console.log("SD Validate");
+            console.log("SmartDebit: Validate");
             console.log(payload);
 
             //We dont use needle here as there were headers it didnt like (it is very strict apparently?) so we use the request method as per the smartdebit docs
@@ -951,7 +952,7 @@ function ProcessSmartDebit(_customer_in, _data_in, callback){
                 //console.log(res.body)
 
                 if (err) {
-                    console.log("Err");
+                    console.log("SmartDebit : Request: Err:");
                     a_callback(err);
                 } else if (res.statusCode != 200) {
                     a_callback({
@@ -963,6 +964,7 @@ function ProcessSmartDebit(_customer_in, _data_in, callback){
                 } else if (res.body.error) {
                     a_callback(res.body);
                 } else {//success?
+                    console.log("SmartDebit : Request...");
                     console.log(res.body);
                     parseXML(res.body, (err, result)=>{
                         if(err){
@@ -996,7 +998,7 @@ function ProcessSmartDebit(_customer_in, _data_in, callback){
         },     
         //authorise the DD and create it
         function(_sm_debit, a_callback){
-            console.log("SD Create");
+            console.log("SmartDebit: Create");
 
             var options = {
                 'method': 'POST',
@@ -1023,6 +1025,7 @@ function ProcessSmartDebit(_customer_in, _data_in, callback){
                 // console.log("res end");
 
                 if (err) {
+                    console.log("SmartDebit : Create : Error: ");
                     a_callback(err);
                 } else if (res.statusCode != 200) {
                     a_callback({
