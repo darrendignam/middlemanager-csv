@@ -203,8 +203,8 @@ function ProcessRows(incoming_rows, rows_complete){
 
                     console.log(`Process Row : Customer: ${current_csv_row[ _csv['1 Booking-ID'] ]}: "${current_csv_row[ _csv['9 First-Name'] ]} ${current_csv_row[ _csv['10 Surname'] ]}"`)
 
-                    //TODO: Perhaps use column 0 to do this now - as it has a field to say explicity what the  row represents
-                    if(current_csv_row[ _csv['55 Upfront-Payment-Amount'] ] == ""){
+                    // Use Col 0 to decide if this is a reservation or not
+                    if(current_csv_row[ _csv['0 Type'] ] != "Reservation and Check in"){
                         NewReservation( current_csv_row, g_siteData, g_contactData, (err, result)=>{
                             if (err) {
                                 nextCallback(err);
